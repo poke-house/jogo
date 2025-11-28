@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poke House – Monte a Bowl v1.12</title>
+    <title>Poke House – Monte a Bowl v1.14</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -52,8 +52,8 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        /* Fundo base para o "céu" */
-        body { margin: 0; overflow: hidden; background-color: #E0F2FF; touch-action: manipulation; }
+        /* Fundo base */
+        body { margin: 0; overflow: hidden; background-color: #FFE6F2; touch-action: manipulation; }
         .backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 4px; }
@@ -86,6 +86,7 @@
                 "Batata Doce com Alecrim", "Brócolis", "Pickle Cebola", "Beterraba", "Cenoura c/ Soja", "Milho", "Abacaxi",
                 "Edamame", "Tomate Cherry", "Couve roxa", "Courgette", "Cenoura", "Grana Padano", "Pepino", "Feta",
                 "Jalapeños", "Azeitonas", "Abacate", "Philadelphia", "Wakame", "Manga", "Hummus", 
+                "Hortelã (Fresca)"
             ],
             proteins: [
                 "Salmão Braseado", "Filé de Salmão", "Frango Vietnamita", "Camarão Panado", "Frango", "Frango Teriyaki",
@@ -94,7 +95,7 @@
             sauces_final: [
                 "Creamy Caesar", "Creme de Abacate", "Spicy Peanuts", "Mel", "Chipotle", "Sésamo Shoyu", "Sriracha Mayo",
                 "Wasabi Mayo", "Azeite", "Azeite de Limão", "Manjericão e Hortelã", "Vinagrete", "Soja", "Teriyaki",
-                "Ponzu", "Especial",
+                "Ponzu", "Especial"
             ],
             crispies: [
                 "Cebola frita", "Ervilhas Wasabi", "Algas Nori", "Amêndoa", "Batata Doce", "Lima", "Bacon", "Croutons",
@@ -170,7 +171,7 @@
             return array;
         }
 
-        // --- FUNDO (CÉU E MAR COM DIVISÃO CLARA E SURFISTAS RESTRITOS) ---
+        // --- FUNDO (CÉU ROSA, MAR AZUL DUPLO E RASTRO DOS SURFISTAS) ---
         const OceanBackground = ({ active }) => {
             const canvasRef = React.useRef(null);
             
@@ -180,12 +181,14 @@
                 if (!canvas) return;
                 const ctx = canvas.getContext("2d");
                 
-                const seaLevelFactor = 0.3; 
+                // Fator do nível do mar: 0.6 significa que o céu é 60% e o mar 40%
+                const seaLevelFactor = 0.6; 
+                const skyColor = "#FFE6F2"; // Rosa Pastel 100
 
+                // Apenas duas camadas de azul
                 const waves = [
-                    { color: "#80A8FF", offset: 20, amplitude: 8, wavelength: 100, speed: 0.2 }, 
-                    { color: "#A0C4FF", offset: 10, amplitude: 6, wavelength: 80, speed: 0.3 },  
-                    { color: "#BDE0FE", offset: 0,  amplitude: 5, wavelength: 60, speed: 0.5 },  
+                    { color: "#80A8FF", offset: 15, amplitude: 8, wavelength: 120, speed: 0.2 }, // Azul mais fundo
+                    { color: "#A0C4FF", offset: 5,  amplitude: 6, wavelength: 90, speed: 0.3 },  // Azul mais claro (topo)
                 ];
                 
                 let surfers = []; 
@@ -193,21 +196,23 @@
 
                 const createSurfer = () => {
                     const startSide = Math.random() > 0.5 ? 'LEFT' : 'RIGHT';
-                    const slope = (Math.random() * 0.6) - 0.3; 
+                    const slope = (Math.random() * 0.5) - 0.25; 
 
                     const horizonY = canvas.height * seaLevelFactor;
-                    const minY = horizonY + 50;
-                    const maxY = canvas.height - 50;
+                    const minY = horizonY + 40;
+                    const maxY = canvas.height - 40;
                     const spawnY = minY + Math.random() * (maxY - minY);
+                    const sizeScale = 0.7 + Math.random() * 0.6;
 
                     return { 
                         x: startSide === 'LEFT' ? -100 : canvas.width + 100, 
                         y: spawnY,
-                        speedX: (startSide === 'LEFT' ? 1 : -1) * (1 + Math.random() * 1.5), 
+                        speedX: (startSide === 'LEFT' ? 1 : -1) * (1 + Math.random() * 1.2), 
                         slope: slope,
                         sprite: SURFER_EMOJIS[Math.floor(Math.random() * SURFER_EMOJIS.length)],
-                        sizeScale: 0.7 + Math.random() * 0.6,
-                        active: true
+                        sizeScale: sizeScale,
+                        active: true,
+                        trail: [] // Array para guardar o histórico de posições
                     };
                 };
 
@@ -222,18 +227,23 @@
                     
                     const horizonY = canvas.height * seaLevelFactor;
 
-                    ctx.fillStyle = "#E0F2FF"; 
-                    ctx.fillRect(0, 0, canvas.width, horizonY + 5); 
+                    // 1. Desenha o Céu Rosa
+                    ctx.fillStyle = skyColor; 
+                    ctx.fillRect(0, 0, canvas.width, horizonY + 10); 
 
+                    // 2. Desenha as ondas
                     waves.forEach((w) => drawWave(ctx, w, time, canvas.width, canvas.height, horizonY));
                     
+                    // 3. Gerenciamento de Surfistas
                     if (surfers.length < 2 && Math.random() < 0.008) {
                         surfers.push(createSurfer());
                     }
 
                     surfers.forEach(f => updateSurfer(f, canvas.width, canvas.height, horizonY));
                     surfers = surfers.filter(f => f.active);
-                    surfers.forEach(f => drawSurfer(ctx, f));
+                    // Desenha o rastro ANTES do surfista
+                    surfers.forEach(f => drawSurferTrail(ctx, f));
+                    surfers.forEach(f => drawSurferSprite(ctx, f));
                     
                     animationFrameId = requestAnimationFrame(loop);
                 };
@@ -259,13 +269,40 @@
         }
         
         function updateSurfer(f, w, h, horizonY){ 
+            // Adiciona a posição atual ao histórico do rastro
+            f.trail.push({x: f.x, y: f.y});
+            // Limita o tamanho do rastro (ex: últimos 25 frames)
+            if (f.trail.length > 25) {
+                f.trail.shift();
+            }
+
             f.x += f.speedX;
             f.y += f.speedX * f.slope;
-            if(f.x < -150 || f.x > w + 150 || f.y < horizonY - 30 || f.y > h + 150){
+            // Margem maior no horizonte para ele sumir antes de bater no céu
+            if(f.x < -150 || f.x > w + 150 || f.y < horizonY - 20 || f.y > h + 150){
                 f.active = false;
             }
         }
-        function drawSurfer(ctx,f){ ctx.font=`${Math.max(24,f.sizeScale*40)}px sans-serif`; ctx.fillText(f.sprite,f.x,f.y); }
+
+        // Nova função para desenhar o rastro
+        function drawSurferTrail(ctx, f) {
+            const trailSize = 25 * f.sizeScale; // Tamanho base do "pixel" do rastro
+            f.trail.forEach((point, index) => {
+                // Calcula a opacidade baseada na idade do ponto (mais recente = mais visível)
+                const opacity = (index / f.trail.length) * 0.6; 
+                ctx.fillStyle = `rgba(240, 255, 255, ${opacity})`; // Branco azulado
+                // Desenha um pequeno quadrado (pixel) centrado na posição antiga
+                ctx.fillRect(point.x + 10, point.y + 20, trailSize, trailSize * 0.6);
+            });
+        }
+
+        function drawSurferSprite(ctx, f){ 
+            ctx.font=`${Math.max(24,f.sizeScale*40)}px sans-serif`; 
+            // Sombra simples para destacar do rastro
+            ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 5;
+            ctx.fillText(f.sprite,f.x,f.y); 
+            ctx.shadowBlur = 0; // Reseta sombra
+        }
 
 
         // --- APP ---
@@ -544,7 +581,7 @@
                     </div>
                      {/* VERSION LABEL */}
        <div className="fixed bottom-1 right-2 text-xs text-slate-500/60 font-sans z-50 pointer-events-none select-none">
-           v1.12 BETA
+           v1.14 BETA
        </div>
                 </div>
             );
