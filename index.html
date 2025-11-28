@@ -45,7 +45,7 @@
         body { margin: 0; overflow: hidden; background-color: #ffe6f2; touch-action: manipulation; }
         .backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
         
-        /* Scrollbar personalizada e bonita */
+        /* Scrollbar personalizada */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #7da9e3; border-radius: 4px; }
@@ -67,9 +67,9 @@
         // --- DADOS ---
         const INGREDIENTS_DB = {
             bases: ["Arroz de sushi", "Arroz preto", "Quinoa", "Arroz basmati", "Coconut Basmati", "Espinafres", "Winter Salad"],
-            sauces_base: ["Azeite", "Azeite de Limão", "Vinagrete", "Ponzu", "Sriracha mayo", "Não leva"],
+            sauces_base: ["Azeite", "Azeite de Limão", "Vinagrete", "Ponzu", "Sriracha Mayo", "Não leva"],
             greens: [
-                "Batata Doce com Alecrim", "Brócolis", "Pickle Cebola", "Beterraba", "Cenoura c/ soja", "Milho", "Abacaxi",
+                "Batata Doce com Alecrim", "Brócolis", "Pickle Cebola", "Beterraba", "Cenoura c/ Soja", "Milho", "Abacaxi",
                 "Edamame", "Tomate cherry", "Couve roxa", "Courgette", "Cenoura", "Grana Padano", "Pepino", "Feta",
                 "Jalapeños", "Azeitonas", "Abacate", "Philadelphia", "Wakame", "Manga", "Hummus", "Tomate"
             ],
@@ -84,23 +84,24 @@
             ],
             crispies: [
                 "Cebola frita", "Ervilhas Wasabi", "Algas Nori", "Amêndoa", "Batata Doce", "Lima", "Bacon", "Croutons",
-                "Alho Crocante", "Batata doce crocante", "Não leva", "Cebola Crocante"
+                "Alho Crocante", "Batata Doce Crocante", "Não leva", "Cebola Crocante"
             ],
             sesame: ["Sim", "Não"]
         };
 
         const RECIPES = [
+            // Corrigido: Creme de Abacate, Sriracha Mayo (padronizado), Cenoura c/ Soja, Batata Doce Crocante
             { id: 1, name: "Sunny Salmon 🌞", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Abacate", "Couve roxa", "Edamame"], protein: ["Juicy Salmon", "Juicy Salmon"], sauce_final: ["Especial", "Creme de Abacate"], crispy: ["Não leva"], sesame: ["Sim"] },
             { id: 2, name: "Spicy Tuna 🐟", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Couve roxa", "Pepino", "Cenoura"], protein: ["Atum", "Atum"], sauce_final: ["Ponzu", "Spicy Peanuts"], crispy: ["Cebola frita"], sesame: ["Sim"] },
-            { id: 3, name: "Vegetarian 🌿", base: ["Arroz basmati", "Arroz basmati"], sauce_base: ["Não leva"], greens: ["Abacate", "Hummus", "Hummus", "Tomate", "Pepino", "Azeitonas"], protein: ["Não leva"], sauce_final: ["Mint"], crispy: ["Batata doce crocante"], sesame: ["Sim"] },
+            { id: 3, name: "Vegetarian 🌿", base: ["Arroz basmati", "Arroz basmati"], sauce_base: ["Não leva"], greens: ["Abacate", "Hummus", "Hummus", "Tomate", "Pepino", "Azeitonas"], protein: ["Não leva"], sauce_final: ["Mint"], crispy: ["Batata Doce Crocante"], sesame: ["Sim"] },
             { id: 4, name: "Chicken 🐔", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Couve roxa", "Tomate cherry", "Courgette"], protein: ["Frango Teriyaki", "Frango Teriyaki"], sauce_final: ["Teriyaki", "Sriracha Mayo"], crispy: ["Amêndoa"], sesame: ["Sim"] },
-            { id: 5, name: "Fire Salmon 🔥", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Sriracha mayo"], greens: ["Jalapeños", "Tomate cherry", "Pepino"], protein: ["Salmão", "Salmão"], sauce_final: ["Sriracha Mayo"], crispy: ["Cebola frita"], sesame: ["Sim"] },
+            { id: 5, name: "Fire Salmon 🔥", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Sriracha Mayo"], greens: ["Jalapeños", "Tomate cherry", "Pepino"], protein: ["Salmão", "Salmão"], sauce_final: ["Sriracha Mayo"], crispy: ["Cebola frita"], sesame: ["Sim"] },
             { id: 6, name: "Mixed Seas 🌊", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Manga", "Wakame", "Cenoura", "Pickle Cebola"], protein: ["Atum", "Salmão"], sauce_final: ["Ponzu"], crispy: ["Ervilhas Wasabi"], sesame: ["Sim"] },
             { id: 7, name: "Crispy Shrimp 🦐", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Abacate", "Philadelphia", "Manga", "Pepino"], protein: Array(8).fill("Camarão Panado"), sauce_final: ["Teriyaki", "Sriracha Mayo"], crispy: ["Algas Nori"], sesame: ["Sim"] },
             { id: 8, name: "Salmon Sushi 🍣", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Abacate", "Philadelphia", "Edamame"], protein: ["Salmão Braseado", "Salmão Braseado"], sauce_final: ["Teriyaki"], crispy: ["Cebola Crocante"], sesame: ["Sim"] },
             { id: 9, name: "The Caesar 🥗", base: ["Winter Salad", "Winter Salad", "Winter Salad"], sauce_base: ["Vinagrete"], greens: ["Tomate", "Tomate", "Grana Padano"], protein: ["Frango", "Frango", "Frango"], sauce_final: ["Creamy Caesar"], crispy: ["Bacon", "Croutons"], sesame: ["Não"] },
             { id: 10, name: "Exotic Salmon 🥗", base: ["Coconut Basmati", "Espinafres", "Espinafres", "Espinafres"], sauce_base: ["Azeite de Limão"], greens: ["Batata Doce com Alecrim", "Batata Doce com Alecrim", "Brócolis", "Abacate"], protein: ["Filé de Salmão", "Filé de Salmão", "Filé de Salmão"], sauce_final: ["Sriracha Mayo"], crispy: ["Não leva"], sesame: ["Sim"] },
-            { id: 11, name: "Velvet Garden 🥗", base: ["Winter Salad", "Winter Salad", "Winter Salad"], sauce_base: ["Vinagrete"], greens: ["Cenoura c/ soja", "Beterraba", "Azeitonas", "Pickle Cebola", "Feta", "Feta", "Feta"], protein: ["Não leva"], sauce_final: ["Manjericão e Hortelã"], crispy: ["Não leva"], sesame: ["Sim"] },
+            { id: 11, name: "Velvet Garden 🥗", base: ["Winter Salad", "Winter Salad", "Winter Salad"], sauce_base: ["Vinagrete"], greens: ["Cenoura c/ Soja", "Beterraba", "Azeitonas", "Pickle Cebola", "Feta", "Feta", "Feta"], protein: ["Não leva"], sauce_final: ["Manjericão e Hortelã"], crispy: ["Não leva"], sesame: ["Sim"] },
             { id: 12, name: "Cozy Chicken 🥗", base: ["Coconut Basmati", "Espinafres", "Espinafres"], sauce_base: ["Azeite de Limão"], greens: ["Brócolis", "Batata Doce com Alecrim", "Couve roxa", "Courgette"], protein: ["Frango Vietnamita", "Frango Vietnamita", "Frango Vietnamita"], sauce_final: ["Soja"], crispy: ["Não leva"], sesame: ["Sim"] }
         ];
 
@@ -353,4 +354,3 @@
     </script>
 </body>
 </html>
-
