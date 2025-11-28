@@ -15,20 +15,8 @@
             theme: {
                 extend: {
                     colors: {
-                        'pastel-pink': {
-                            100: '#FFE6F2',
-                            200: '#FFC8DD',
-                            300: '#FFAFCC',
-                            400: '#FF99C8',
-                            500: '#FF70A6',
-                        },
-                        'pastel-blue': {
-                            100: '#E0F2FF',
-                            200: '#BDE0FE',
-                            300: '#A0C4FF',
-                            400: '#80A8FF',
-                            500: '#404FC2',
-                        },
+                        'pastel-pink': { 100: '#FFE6F2', 200: '#FFC8DD', 300: '#FFAFCC', 400: '#FF99C8', 500: '#FF70A6' },
+                        'pastel-blue': { 100: '#E0F2FF', 200: '#BDE0FE', 300: '#A0C4FF', 400: '#80A8FF', 500: '#404FC2' },
                         'pastel-green': '#A7F3D0',
                     },
                     animation: {
@@ -85,6 +73,9 @@
         const IconRotate = ({ size = 20, color = "currentColor" }) => (
              <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         );
+        const IconTrophy = ({ size = 24, color = "currentColor" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        );
 
         // --- DADOS ---
         const INGREDIENTS_DB = {
@@ -122,7 +113,7 @@
             { id: 7, category: "HOUSE", name: "Crispy Shrimp 🦐", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Abacate", "Philadelphia", "Manga", "Pepino"], protein: Array(8).fill("Camarão Panado"), sauce_final: ["Teriyaki", "Sriracha Mayo"], crispy: ["Algas Nori"], sesame: ["Sim"] },
             { id: 8, category: "HOUSE", name: "Salmon Sushi 🍣", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Abacate", "Philadelphia", "Edamame"], protein: ["Salmão Braseado", "Salmão Braseado"], sauce_final: ["Teriyaki"], crispy: ["Cebola Crocante"], sesame: ["Sim"] },
             
-            // GREEN BOWLS (Atualizado: Sésamo = Não)
+            // GREEN BOWLS
             { id: 9, category: "GREEN", name: "The Caesar 🥗", base: ["Winter Salad", "Winter Salad", "Winter Salad"], sauce_base: ["Vinagrete"], greens: ["Tomate", "Tomate", "Grana Padano"], protein: ["Frango", "Frango", "Frango"], sauce_final: ["Creamy Caesar"], crispy: ["Bacon", "Croutons"], sesame: ["Não"] },
             { id: 10, category: "GREEN", name: "Exotic Salmon 🥗", base: ["Coconut Basmati", "Espinafres", "Espinafres", "Espinafres"], sauce_base: ["Azeite de Limão"], greens: ["Batata Doce com Alecrim", "Batata Doce com Alecrim", "Brócolis", "Abacate"], protein: ["Filé de Salmão", "Filé de Salmão", "Filé de Salmão"], sauce_final: ["Sriracha Mayo"], crispy: ["Não leva"], sesame: ["Não"] },
             { id: 11, category: "GREEN", name: "Velvet Garden 🥗", base: ["Winter Salad", "Winter Salad", "Winter Salad"], sauce_base: ["Vinagrete"], greens: ["Cenoura c/ Soja", "Beterraba", "Azeitonas", "Pickle Cebola", "Feta", "Feta", "Feta"], protein: ["Não leva"], sauce_final: ["Manjericão e Hortelã"], crispy: ["Não leva"], sesame: ["Não"] },
@@ -183,9 +174,7 @@
             const canvasRef = React.useRef(null);
             
             React.useEffect(() => {
-                // Se não estiver ativo (jogando), não renderiza nada para poupar memória
                 if (!active) return;
-
                 const canvas = canvasRef.current;
                 if (!canvas) return;
                 const ctx = canvas.getContext("2d");
@@ -195,63 +184,35 @@
                     { color: "#FFC8DD", baseYFactor: 0.8, amplitude: 3, wavelength: 55, speed: 0.35 },
                     { color: "#BDE0FE", baseYFactor: 0.7, amplitude: 2, wavelength: 70, speed: 0.18 },
                 ];
-                
-                let surfers = []; 
-                let splashes = [];
+                let surfers = []; let splashes = [];
                 const SURFER_EMOJIS = ['🏄‍♂️', '🏄‍♀️'];
 
                 const createSurfer = (stagger=0) => ({ 
-                    jumping: false, 
-                    jumpTime: 0, 
-                    nextSpawn: 60 + Math.random() * 180 + stagger, // Mais frequente
-                    x: 0, y: 0, baseY: 0, 
-                    jumpDuration: 100 + Math.random() * 50, 
-                    jumpHeight: 15 + Math.random() * 10, 
-                    sizeScale: 0.8 + Math.random() * 0.8,
+                    jumping: false, jumpTime: 0, nextSpawn: 60 + Math.random() * 200 + stagger, 
+                    x: 0, y: 0, baseY: 0, jumpDuration: 200 + Math.random() * 100, 
+                    jumpHeight: 15 + Math.random() * 10, sizeScale: 0.8 + Math.random() * 0.8,
                     sprite: SURFER_EMOJIS[Math.floor(Math.random() * SURFER_EMOJIS.length)]
                 });
 
-                for(let i=0; i<5; i++) surfers.push(createSurfer(i*30));
+                for(let i=0; i<2; i++) surfers.push(createSurfer(i*200));
 
                 const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
                 window.addEventListener("resize", resize); resize();
 
                 let animationFrameId;
-
                 const loop = (now) => {
-                    const t = now/1000; 
-                    // Limpa o canvas (transparente)
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    
-                    // Fundo Sólido (Céu)
-                    ctx.fillStyle = "#FFE6F2"; 
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    // Ondas de fundo
+                    const t = now/1000; ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = "#FFE6F2"; ctx.fillRect(0, 0, canvas.width, canvas.height);
                     waves.forEach((w,i) => { if(i!==0) drawWave(ctx,w,t,canvas.width,canvas.height); });
-                    
-                    // Surfistas
                     surfers.forEach(f => updateSurfer(f, canvas.width, canvas.height, waves[1], splashes));
-                    
-                    // Splashes
                     splashes = splashes.filter(s => s.particles.length > 0);
                     splashes.forEach(s => updateAndDrawSplash(ctx, s));
-                    
-                    // Desenha Surfistas (se visíveis)
                     surfers.forEach(f => { if(f.jumping) drawSurfer(ctx, f); });
-                    
-                    // Onda da frente
                     drawWave(ctx, waves[0], t, canvas.width, canvas.height);
-                    
                     animationFrameId = requestAnimationFrame(loop);
                 };
-                
                 animationFrameId = requestAnimationFrame(loop);
-                
-                return () => {
-                    window.removeEventListener("resize", resize);
-                    cancelAnimationFrame(animationFrameId);
-                };
+                return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(animationFrameId); };
             }, [active]);
 
             if (!active) return null;
@@ -259,31 +220,12 @@
         };
 
         function drawWave(ctx,w,t,width,height){ ctx.fillStyle=w.color; ctx.beginPath(); ctx.moveTo(0,height); const baseY=height*w.baseYFactor; for(let x=0;x<=width;x+=10) ctx.lineTo(x,baseY+Math.sin(x/w.wavelength+t*w.speed)*w.amplitude); ctx.lineTo(width,height); ctx.fill(); }
-        
         function updateSurfer(f,w,h,wave,splashes){ 
-            if(!f.jumping){ 
-                f.nextSpawn--; 
-                if(f.nextSpawn<=0){ 
-                    f.jumping=true; f.jumpTime=0; 
-                    f.x=Math.random()*(w); // Posição X aleatória
-                    f.baseY=h*wave.baseYFactor-10; 
-                    f.nextSpawn=200+Math.random()*200; 
-                } 
-            }else{ 
-                f.jumpTime++; 
-                const t=f.jumpTime/f.jumpDuration; 
-                
-                // Movimento de "surfar" (senoidal suave)
-                f.x -= 0.5; // Move para esquerda
-                f.y = f.baseY + Math.sin(t * 10) * 5; 
-                
-                if(t>=1 || f.x < -50){ 
-                    f.jumping=false; 
-                    splashes.push({particles:Array(4).fill(0).map(()=>({x:f.x+20,y:f.baseY,vx:(Math.random()-0.5)*2,vy:-Math.random()*2-1,life:20}))}); 
-                } 
+            if(!f.jumping){ f.nextSpawn--; if(f.nextSpawn<=0){ f.jumping=true; f.jumpTime=0; f.x=Math.random()*(w); f.baseY=h*wave.baseYFactor-10; f.nextSpawn=300+Math.random()*300; } }
+            else{ f.jumpTime++; const t=f.jumpTime/f.jumpDuration; f.x -= 0.2; f.y = f.baseY + Math.sin(t * 3) * 5; 
+                if(t>=1 || f.x < -50){ f.jumping=false; splashes.push({particles:Array(4).fill(0).map(()=>({x:f.x+20,y:f.baseY,vx:(Math.random()-0.5)*2,vy:-Math.random()*2-1,life:20}))}); } 
             } 
         }
-        
         function drawSurfer(ctx,f){ ctx.font=`${Math.max(20,f.sizeScale*30)}px sans-serif`; ctx.fillText(f.sprite,f.x,f.y); }
         function updateAndDrawSplash(ctx,s){ s.particles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.2; p.life--; ctx.fillStyle=`rgba(255,255,255,${p.life/20})`; ctx.fillRect(p.x,p.y,3,3); }); }
 
@@ -299,6 +241,20 @@
             const [timer, setTimer] = React.useState(20);
             const [timerEmoji, setTimerEmoji] = React.useState("😃");
             const [errorDetails, setErrorDetails] = React.useState([]);
+            
+            // SCORE SYSTEM
+            const [startTime, setStartTime] = React.useState(0);
+            const [finalScore, setFinalScore] = React.useState(0);
+            const [playerName, setPlayerName] = React.useState("");
+            const [highScore, setHighScore] = React.useState({ name: "Ainda Ninguém", score: 0 });
+
+            // Load High Score on Mount
+            React.useEffect(() => {
+                const savedScore = localStorage.getItem('pokeHighScore');
+                if (savedScore) {
+                    setHighScore(JSON.parse(savedScore));
+                }
+            }, []);
 
             // Timer Logic
             React.useEffect(() => {
@@ -315,7 +271,6 @@
                     const phaseKey = PHASES[currentPhaseIndex].key;
                     const fullList = getFullIngredientList(phaseKey);
                     const requiredIngs = selectedRecipe[phaseKey];
-                    
                     const requiredSet = new Set(requiredIngs);
                     const requiredUnique = [...requiredSet];
                     const distractors = fullList.filter(ing => !requiredSet.has(ing));
@@ -323,7 +278,6 @@
                     const slotsNeeded = Math.max(0, 9 - requiredUnique.length);
                     const selectedDistractors = shuffledDistractors.slice(0, slotsNeeded);
                     const finalOptions = shuffleArray([...requiredUnique, ...selectedDistractors]);
-                    
                     setPhaseOptions(finalOptions);
                 }
             }, [currentPhaseIndex, gameState, selectedRecipe]);
@@ -335,12 +289,14 @@
                 setCurrentSelections([]); 
                 setAllSelections({}); 
                 setTimer(20);
+                setStartTime(Date.now()); // Mark start time
             };
 
             const resetToHome = () => {
                 setGameState("HOME");
                 setMenuCategory(null);
                 setSelectedRecipe(null);
+                setPlayerName("");
             };
 
             const handleSelection = (ingredient) => {
@@ -373,6 +329,15 @@
                     const selected = [...finalSelections[phase.key]].sort();
                     if (JSON.stringify(required) !== JSON.stringify(selected)) errors.push(`Erro em ${phase.title.replace(":", "")}. Era: ${required.join(", ")}`);
                 });
+                
+                // Calculate Score
+                if (errors.length === 0) {
+                    const durationSeconds = (Date.now() - startTime) / 1000;
+                    // Base 1000 - (5 points per second)
+                    const score = Math.max(0, Math.round(1000 - (durationSeconds * 5)));
+                    setFinalScore(score);
+                }
+                
                 handleGameOver(errors.length === 0, errors);
             };
 
@@ -380,11 +345,21 @@
                 if (success) {
                     setGameState("RESULT_SUCCESS"); playSound("happy");
                     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                    setTimeout(resetToHome, 10000);
                 } else {
                     setErrorDetails(errors); setGameState("RESULT_FAIL"); playSound("sad");
-                    setTimeout(resetToHome, 20000);
                 }
+            };
+
+            const saveScore = () => {
+                if (!playerName.trim()) return;
+                
+                // Check if new High Score
+                if (finalScore > highScore.score) {
+                    const newRecord = { name: playerName, score: finalScore };
+                    setHighScore(newRecord);
+                    localStorage.setItem('pokeHighScore', JSON.stringify(newRecord));
+                }
+                resetToHome();
             };
 
             const getFullIngredientList = (key) => {
@@ -402,10 +377,9 @@
 
             return (
                 <div className="fixed inset-0 w-full h-full font-sans text-slate-800 flex flex-col md:flex-row overflow-hidden">
-                    {/* Fundo anima apenas se NÃO estiver jogando (Playing) */}
                     <OceanBackground active={gameState !== "PLAYING"} />
                     
-                    {/* MENU LATERAL / SUPERIOR */}
+                    {/* MENU */}
                     <div className={`p-4 md:w-1/4 flex flex-col gap-2 transition-all duration-500 z-10 bg-pastel-pink-100/80 backdrop-blur-md border-r border-pastel-pink-200/40 shadow-lg
                         ${gameState === "HOME" ? "w-full h-full overflow-y-auto" : "hidden md:flex h-full overflow-y-auto"}
                     `}>
@@ -415,6 +389,13 @@
                         
                         {menuCategory === null ? (
                             <div className="flex flex-col gap-4 mt-4 md:mt-0 h-full justify-center md:justify-start">
+                                {/* SCORE BOARD */}
+                                <div className="bg-white/50 p-4 rounded-xl mb-4 border border-pastel-blue-200 shadow-sm text-center">
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide font-bold">🏆 Recorde Atual</p>
+                                    <p className="text-pastel-blue-500 font-extrabold text-xl">{highScore.score} pts</p>
+                                    <p className="text-sm text-slate-700">{highScore.name}</p>
+                                </div>
+
                                 <button onClick={() => setMenuCategory("HOUSE")} className="bg-pastel-blue-400 text-white p-6 rounded-2xl shadow-lg hover:bg-pastel-blue-500 transition-all transform hover:scale-105 flex flex-col items-center">
                                     <span className="text-4xl mb-2">🐟</span>
                                     <span className="text-xl font-bold">House Bowls</span>
@@ -437,16 +418,14 @@
                         )}
                     </div>
 
-                    {/* ÁREA DE JOGO */}
+                    {/* JOGO */}
                     <div className={`flex-1 relative z-10 flex flex-col items-center justify-center p-2 md:p-6 ${gameState === "HOME" ? "hidden md:flex" : "flex h-full"}`}>
                         
                         {gameState === "PLAYING" && (
                             <div className="w-full h-full md:h-auto md:max-h-[90vh] max-w-5xl bg-pastel-pink-100/85 backdrop-blur-md rounded-xl md:rounded-3xl shadow-xl border border-pastel-pink-200/50 animate-fade-in flex flex-col overflow-hidden">
-                                
                                 <div className="p-2 bg-pastel-blue-200/50 text-center text-pastel-blue-500 font-semibold text-sm md:text-base border-b border-pastel-blue-200/50 shrink-0">
                                     Receita Atual: <span className="font-bold">{selectedRecipe.name}</span>
                                 </div>
-
                                 <div className="flex justify-between items-center p-4 border-b border-pastel-pink-200/50 bg-pastel-pink-100/40 shrink-0">
                                     <div>
                                         <h2 className="text-xl md:text-3xl font-bold text-pastel-blue-500">{PHASES[currentPhaseIndex].title}</h2>
@@ -455,7 +434,6 @@
                                     </div>
                                     <div className="flex flex-col items-center min-w-[60px]"><span className="text-3xl md:text-4xl">{timerEmoji}</span><span className="text-xl md:text-2xl font-bold text-pastel-blue-500">{timer}s</span></div>
                                 </div>
-
                                 <div className="flex-1 overflow-y-auto p-2 md:p-6 custom-scroll min-h-0 flex items-center justify-center">
                                     <div className={`grid gap-2 md:gap-4 w-full ${phaseOptions.length > 6 ? 'grid-cols-3 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-3'}`}>
                                         {phaseOptions.map(ing => {
@@ -470,7 +448,6 @@
                                         })}
                                     </div>
                                 </div>
-
                                 <div className="p-3 md:p-4 border-t border-pastel-pink-200/50 bg-pastel-pink-100/40 flex justify-between shrink-0">
                                     <button onClick={resetToHome} className="flex items-center gap-2 text-pastel-blue-500 font-bold text-sm md:text-base hover:bg-pastel-blue-100/50 px-3 py-2 rounded-lg transition-colors"><IconHome size={20} color="#404FC2"/> INÍCIO</button>
                                     <button onClick={handleUndo} disabled={currentSelections.length === 0} className="flex items-center gap-2 px-4 md:px-6 py-2 bg-white border border-pastel-blue-200 rounded-full font-bold text-pastel-blue-500 disabled:opacity-50 hover:bg-pastel-blue-100 text-sm md:text-base shadow-sm"><IconArrowLeft size={20} color="#404FC2"/> Desfazer</button>
@@ -479,13 +456,32 @@
                         )}
 
                         {gameState === "RESULT_SUCCESS" && (
-                            <div className="text-center p-10 bg-pastel-pink-100/95 rounded-3xl shadow-2xl animate-bounce-in mx-4 border border-white/50">
-                                <h2 className="text-3xl md:text-4xl font-extrabold text-pastel-green mb-4 drop-shadow-sm">Perfeita! 🤩</h2>
-                                <p className="text-lg md:text-xl text-slate-700 mb-6">Sua bowl foi montada corretamente!</p>
-                                <div className="flex justify-center gap-4 text-4xl animate-pulse mb-8"><span>💖</span><span>🐟</span><span>🥑</span></div>
-                                <button onClick={resetToHome} className="bg-pastel-blue-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-pastel-blue-400 transition-transform active:scale-95 flex items-center justify-center gap-2 mx-auto">
-                                    <IconHome size={20} color="#FFF"/> Voltar ao Início
-                                </button>
+                            <div className="text-center p-10 bg-pastel-pink-100/95 rounded-3xl shadow-2xl animate-bounce-in mx-4 border border-white/50 max-w-md w-full">
+                                <h2 className="text-3xl md:text-4xl font-extrabold text-pastel-green mb-2 drop-shadow-sm">Perfeita! 🤩</h2>
+                                <p className="text-lg text-slate-600 mb-6">Sua pontuação final:</p>
+                                
+                                <div className="text-5xl font-black text-pastel-blue-500 mb-6 animate-pulse">{finalScore}</div>
+
+                                {finalScore > highScore.score && (
+                                    <div className="mb-4 bg-yellow-100 text-yellow-700 p-2 rounded-lg font-bold text-sm">
+                                        🌟 NOVO RECORDE! 🌟
+                                    </div>
+                                )}
+
+                                <div className="flex flex-col gap-3">
+                                    <label className="text-sm font-bold text-slate-500 text-left">Digite seu nome para salvar:</label>
+                                    <input 
+                                        type="text" 
+                                        value={playerName} 
+                                        onChange={(e) => setPlayerName(e.target.value)}
+                                        placeholder="Seu Nome" 
+                                        className="p-3 rounded-lg border-2 border-pastel-blue-200 focus:border-pastel-blue-500 outline-none text-center font-bold text-lg"
+                                        maxLength={12}
+                                    />
+                                    <button onClick={saveScore} disabled={!playerName.trim()} className="mt-2 bg-pastel-blue-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-pastel-blue-400 transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2">
+                                        Gravar e Voltar
+                                    </button>
+                                </div>
                             </div>
                         )}
 
