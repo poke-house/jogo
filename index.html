@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poke House – Monte a Bowl v1.15</title>
+    <title>Poke House – Monte a Bowl v1.16</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -118,7 +118,7 @@
             // GREEN BOWLS
             { id: 9, category: "GREEN", name: "The Caesar 🥗", base: ["Winter Salad", "Winter Salad", "Winter Salad"], sauce_base: ["Vinagrete"], greens: ["Tomate Cherry", "Tomate Cherry", "Grana Padano"], protein: ["Frango", "Frango", "Frango"], sauce_final: ["Creamy Caesar"], crispy: ["Bacon", "Croutons", "Lima"], sesame: ["Não"] },
             { id: 10, category: "GREEN", name: "Exotic Salmon 🥗", base: ["Coconut Basmati", "Espinafres", "Espinafres", "Espinafres"], sauce_base: ["Azeite de Limão"], greens: ["Batata Doce com Alecrim", "Batata Doce com Alecrim", "Brócolis", "Abacate"], protein: ["Filé de Salmão", "Filé de Salmão", "Filé de Salmão"], sauce_final: ["Sriracha Mayo"], crispy: ["Não leva"], sesame: ["Não"] },
-            { id: 11, category: "GREEN", name: "Velvet Garden 🥗", base: ["Winter Salad", "Winter Salad", "Winter Salad"], sauce_base: ["Vinagrete"], greens: ["Cenoura c/ Soja", "Beterraba", "Azeitonas", "Pickle Cebola", "Feta", "Feta", "Feta"], protein: ["Não leva"], sauce_final: ["Manjericão e Hortelã"], crispy: ["Não leva"], sesame: ["Não"] },
+            { id: 11, category: "GREEN", name: "Velvet Garden 🥗", base: ["Winter Salad", "Winter Salad", "Winter Salad"], sauce_base: ["Vinagrete"], greens: ["Cenoura c/Soja", "Beterraba", "Azeitonas", "Pickle Cebola", "Feta", "Feta", "Feta"], protein: ["Não leva"], sauce_final: ["Manjericão e Hortelã"], crispy: ["Não leva"], sesame: ["Não"] },
             { id: 12, category: "GREEN", name: "Cozy Chicken 🥗", base: ["Coconut Basmati", "Espinafres", "Espinafres"], sauce_base: ["Azeite de Limão"], greens: ["Brócolis", "Batata Doce com Alecrim", "Couve roxa", "Courgette"], protein: ["Frango Vietnamita", "Frango Vietnamita", "Frango Vietnamita"], sauce_final: ["Soja"], crispy: ["Não leva"], sesame: ["Não"] }
         ];
 
@@ -171,7 +171,7 @@
             return array;
         }
 
-        // --- FUNDO (CÉU ROSA 60%, MAR DIVIDIDO 16%/24%) ---
+        // --- FUNDO (CÉU ROSA 60%, MAR DIVIDIDO 16%/24%, SURFISTAS ZIGZAG LENTO) ---
         const OceanBackground = ({ active }) => {
             const canvasRef = React.useRef(null);
             
@@ -181,34 +181,13 @@
                 if (!canvas) return;
                 const ctx = canvas.getContext("2d");
                 
-                // --- CONFIGURAÇÃO DE ALTURAS ---
-                // Céu: 0% a 60%
                 const skyHeightRatio = 0.60;
-                
-                // Mar Camada Superior (Mar 2 - 16%): 60% a 76%
                 const seaTopHeightRatio = 0.16; 
-                
-                // Mar Camada Inferior (Mar 1 - 24%): 76% a 100%
-                // (O restante é preenchido)
+                const skyColor = "#FFE6F2";
 
-                const skyColor = "#FFE6F2"; // Rosa Pastel
-
-                // Definição das camadas do mar com cores e offsets fixos
                 const seaLayers = [
-                    { 
-                        name: "Mar 2 (Topo)",
-                        color: "#A0C4FF", // Azul mais claro
-                        startYRatio: skyHeightRatio, // Começa em 60%
-                        endYRatio: skyHeightRatio + seaTopHeightRatio, // Termina em 76%
-                        wave: { amplitude: 5, wavelength: 90, speed: 0.3 }
-                    },
-                    { 
-                        name: "Mar 1 (Fundo)",
-                        color: "#80A8FF", // Azul mais escuro
-                        startYRatio: skyHeightRatio + seaTopHeightRatio, // Começa em 76%
-                        endYRatio: 1.0, // Vai até o fim
-                        wave: { amplitude: 8, wavelength: 120, speed: 0.2 }
-                    }
+                    { name: "Mar 2 (Topo)", color: "#A0C4FF", startYRatio: skyHeightRatio, endYRatio: skyHeightRatio + seaTopHeightRatio, wave: { amplitude: 5, wavelength: 90, speed: 0.3 } },
+                    { name: "Mar 1 (Fundo)", color: "#80A8FF", startYRatio: skyHeightRatio + seaTopHeightRatio, endYRatio: 1.0, wave: { amplitude: 8, wavelength: 120, speed: 0.2 } }
                 ];
                 
                 let surfers = []; 
@@ -216,20 +195,24 @@
 
                 const createSurfer = () => {
                     const startSide = Math.random() > 0.5 ? 'LEFT' : 'RIGHT';
-                    const slope = (Math.random() * 0.5) - 0.25; 
-
                     const horizonY = canvas.height * skyHeightRatio;
-                    // Surfistas aparecem em todo o mar (do horizonte para baixo)
-                    const minY = horizonY + 30;
-                    const maxY = canvas.height - 30;
+                    const minY = horizonY + 50;
+                    const maxY = canvas.height - 50;
                     const spawnY = minY + Math.random() * (maxY - minY);
                     const sizeScale = 0.7 + Math.random() * 0.6;
 
                     return { 
-                        x: startSide === 'LEFT' ? -100 : canvas.width + 100, 
+                        x: startSide === 'LEFT' ? -150 : canvas.width + 150, 
                         y: spawnY,
-                        speedX: (startSide === 'LEFT' ? 1 : -1) * (1 + Math.random() * 1.2), 
-                        slope: slope,
+                        // Velocidade bem mais lenta
+                        speedX: (startSide === 'LEFT' ? 1 : -1) * (0.4 + Math.random() * 0.4), 
+                        // Direção vertical inicial (1 = desce, -1 = sobe)
+                        verticalDir: Math.random() > 0.5 ? 1 : -1,
+                        // Velocidade vertical relativa
+                        verticalSpeedFactor: 0.3 + Math.random() * 0.3,
+                        // Timer para mudar o zigzag
+                        zigzagTimer: 0,
+                        zigzagInterval: 150 + Math.floor(Math.random() * 150),
                         sprite: SURFER_EMOJIS[Math.floor(Math.random() * SURFER_EMOJIS.length)],
                         sizeScale: sizeScale,
                         active: true,
@@ -245,49 +228,37 @@
                 const loop = () => {
                     time += 0.01;
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    
                     const h = canvas.height;
                     const horizonY = h * skyHeightRatio;
+                    const seaBottomY = h;
 
-                    // 1. Desenha o Céu (0 até 60% + um pouquinho para cobrir o gap da onda)
+                    // 1. Céu
                     ctx.fillStyle = skyColor; 
                     ctx.fillRect(0, 0, canvas.width, horizonY + 10); 
 
-                    // 2. Desenha as Camadas do Mar (de baixo para cima na ordem de renderização, ou seja, topo depois fundo? Não, desenhamos a camada de cima por último para sobrepor se necessário, mas aqui são faixas distintas).
-                    // Vamos desenhar a camada de baixo primeiro, depois a de cima, mas garantindo que preencham seus retângulos.
-                    
+                    // 2. Mar
                     seaLayers.forEach(layer => {
                         const startY = h * layer.startYRatio;
                         const endY = h * layer.endYRatio;
-                        const height = endY - startY;
-                        
                         ctx.fillStyle = layer.color;
                         ctx.beginPath();
-                        ctx.moveTo(0, endY); // Canto inferior esquerdo da faixa
-                        
-                        // Linha superior com onda
+                        ctx.moveTo(0, endY);
                         for (let x = 0; x <= canvas.width; x += 10) {
-                            // A onda é desenhada na linha de topo desta camada
                             const waveY = startY + Math.sin(x / layer.wave.wavelength + time * layer.wave.speed) * layer.wave.amplitude;
                             ctx.lineTo(x, waveY);
                         }
-                        
-                        ctx.lineTo(canvas.width, endY); // Canto inferior direito
-                        ctx.lineTo(0, endY); // Fecha
+                        ctx.lineTo(canvas.width, endY);
+                        ctx.lineTo(0, endY);
                         ctx.fill();
-                        
-                        // Se for a última camada (fundo), garante que preencha até o fim absoluto da tela para evitar gaps em telas grandes
-                        if(layer.endYRatio === 1.0) {
-                             ctx.fillRect(0, endY - 1, canvas.width, h - endY + 1);
-                        }
+                        if(layer.endYRatio === 1.0) ctx.fillRect(0, endY - 1, canvas.width, h - endY + 1);
                     });
                     
                     // 3. Surfistas
-                    if (surfers.length < 2 && Math.random() < 0.008) {
+                    if (surfers.length < 2 && Math.random() < 0.005) { // Menor chance de spawn para não lotar com a velocidade lenta
                         surfers.push(createSurfer());
                     }
 
-                    surfers.forEach(f => updateSurfer(f, canvas.width, canvas.height, horizonY));
+                    surfers.forEach(f => updateSurfer(f, canvas.width, canvas.height, horizonY, seaBottomY, time));
                     surfers = surfers.filter(f => f.active);
                     surfers.forEach(f => drawSurferTrail(ctx, f));
                     surfers.forEach(f => drawSurferSprite(ctx, f));
@@ -302,17 +273,48 @@
             return <canvas ref={canvasRef} style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', zIndex:-1}} />;
         };
         
-        function updateSurfer(f, w, h, horizonY){ 
+        // Nova lógica de movimento Zigzag Lento com restrição de horizonte e tremido
+        function updateSurfer(f, w, h, horizonY, seaBottomY, t){ 
             f.trail.push({x: f.x, y: f.y});
-            if (f.trail.length > 25) {
-                f.trail.shift();
+            if (f.trail.length > 30) f.trail.shift(); // Rastro um pouco mais longo
+
+            // Movimento Horizontal Constante (Lento)
+            f.x += f.speedX;
+
+            // Lógica Zigzag Vertical
+            f.zigzagTimer++;
+            
+            // Calcula a próxima posição Y potencial
+            let nextY = f.y + (f.speedX * f.verticalDir * f.verticalSpeedFactor);
+
+            // Margem de segurança do horizonte (para não tocar na onda)
+            const safetyMarginTop = 40;
+            // Margem do fundo
+            const safetyMarginBottom = 40;
+
+            // Verificação de Limites (Zigzag forçado)
+            if (f.verticalDir === -1 && nextY < horizonY + safetyMarginTop) {
+                // Se está subindo e vai passar do horizonte, força a descida imediatamente
+                f.verticalDir = 1;
+                f.zigzagTimer = 0;
+            } else if (f.verticalDir === 1 && nextY > seaBottomY - safetyMarginBottom) {
+                 // Se está descendo muito, força a subida
+                f.verticalDir = -1;
+                f.zigzagTimer = 0;
+            } else if (f.zigzagTimer > f.zigzagInterval) {
+                // Troca de direção normal por tempo
+                f.verticalDir *= -1;
+                f.zigzagTimer = 0;
             }
 
-            f.x += f.speedX;
-            f.y += f.speedX * f.slope;
-            
-            // Limites: Horizonte (topo) e Bordas da tela
-            if(f.x < -150 || f.x > w + 150 || f.y < horizonY - 20 || f.y > h + 150){
+            // Aplica o movimento vertical
+            f.y += Math.abs(f.speedX) * f.verticalDir * f.verticalSpeedFactor;
+
+            // Adiciona o "tremido" lento (oscilação suave)
+            f.y += Math.sin(t * 2 + f.x * 0.01) * 0.5;
+
+            // Verifica se saiu da tela pelas laterais
+            if(f.x < -200 || f.x > w + 200) {
                 f.active = false;
             }
         }
@@ -320,17 +322,19 @@
         function drawSurferTrail(ctx, f) {
             const trailSize = 25 * f.sizeScale; 
             f.trail.forEach((point, index) => {
-                const opacity = (index / f.trail.length) * 0.6; 
-                ctx.fillStyle = `rgba(240, 255, 255, ${opacity})`; 
+                // Opacidade diminui mais lentamente
+                const opacity = (index / f.trail.length) * 0.5; 
+                ctx.fillStyle = `rgba(220, 245, 255, ${opacity})`; 
                 ctx.fillRect(point.x + 10, point.y + 20, trailSize, trailSize * 0.6);
             });
         }
 
         function drawSurferSprite(ctx, f){ 
             ctx.font=`${Math.max(24,f.sizeScale*40)}px sans-serif`; 
-            ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 5;
+            // Sombra suave para destacar
+            ctx.shadowColor = "rgba(0,80,150,0.2)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 5;
             ctx.fillText(f.sprite,f.x,f.y); 
-            ctx.shadowBlur = 0; 
+            ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
         }
 
 
@@ -610,7 +614,7 @@
                     </div>
                      {/* VERSION LABEL */}
        <div className="fixed bottom-1 right-2 text-xs text-slate-500/60 font-sans z-50 pointer-events-none select-none">
-           v1.15 BETA
+           v1.16 BETA
        </div>
                 </div>
             );
