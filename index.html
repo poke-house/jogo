@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poke House – Monte a Bowl v1.18</title>
+    <title>Poke House – Treino v2.01 BETA</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -18,6 +18,7 @@
                         'pastel-pink': { 100: '#FFE6F2', 200: '#FFC8DD', 300: '#FFAFCC', 400: '#FF99C8', 500: '#FF70A6' },
                         'pastel-blue': { 100: '#E0F2FF', 200: '#BDE0FE', 300: '#A0C4FF', 400: '#80A8FF', 500: '#404FC2' },
                         'pastel-green': '#A7F3D0',
+                        'pastel-yellow': '#FEF9C3',
                     },
                     animation: {
                         'bounce-in': 'bounceIn 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) both',
@@ -78,8 +79,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         );
 
-        // --- DADOS ATUALIZADOS ---
+        // --- DADOS DO SISTEMA ---
+        
         const INGREDIENTS_DB = {
+            // --- INGREDIENTES DE BOWLS ---
             bases: ["Arroz de sushi", "Arroz preto", "Quinoa", "Arroz basmati", "Coconut Basmati", "Espinafres", "Winter Salad"],
             sauces_base: ["Azeite", "Azeite de Limão", "Vinagrete", "Ponzu", "Sriracha Mayo", "Não leva"],
             greens: [
@@ -101,7 +104,17 @@
                 "Cebola frita", "Ervilhas Wasabi", "Algas Nori", "Amêndoa", "Batata Doce", "Lima", "Bacon", "Croutons",
                 "Batata Doce Crocante", "Não leva", "Cebola Crocante"
             ],
-            sesame: ["Sim", "Não"]
+            sesame: ["Sim", "Não"],
+
+            // --- INGREDIENTES DE SMOOTHIES (NOVOS) ---
+            smoothie_liquid: ["Leite de Coco", "Leite", "Suco de Maçã"],
+            smoothie_amount: ["150ml", "250ml", "200ml"],
+            smoothie_ingredients: [
+                "Morango", "Banana 90g", "Manga 40g", "Ananás 30g", "Pepino 20g", "Abacate 45g", 
+                "Espinafre 30g", "Sumo de Lima 25g", "Gengibre 5g"
+            ],
+            smoothie_ice: ["Gelo 60g", "Gelo 40g", "Gelo 90g"],
+            smoothie_mode: ["Modo A", "Modo B", "Modo C", "Modo D", "Modo E", "Modo F"]
         };
 
         const RECIPES = [
@@ -119,10 +132,16 @@
             { id: 9, category: "GREEN", name: "The Caesar 🥗", base: ["Winter Salad", "Winter Salad", "Winter Salad"], sauce_base: ["Vinagrete"], greens: ["Tomate Cherry", "Tomate Cherry", "Grana Padano"], protein: ["Frango", "Frango", "Frango"], sauce_final: ["Creamy Caesar"], crispy: ["Bacon", "Croutons", "Lima"], sesame: ["Não"] },
             { id: 10, category: "GREEN", name: "Exotic Salmon 🥗", base: ["Coconut Basmati", "Espinafres", "Espinafres", "Espinafres"], sauce_base: ["Azeite de Limão"], greens: ["Batata Doce com Alecrim", "Batata Doce com Alecrim", "Brócolis", "Abacate"], protein: ["Filé de Salmão", "Filé de Salmão", "Filé de Salmão"], sauce_final: ["Sriracha Mayo"], crispy: ["Não leva"], sesame: ["Não"] },
             { id: 11, category: "GREEN", name: "Velvet Garden 🥗", base: ["Winter Salad", "Winter Salad", "Winter Salad"], sauce_base: ["Vinagrete"], greens: ["Cenoura c/ Soja", "Beterraba", "Azeitonas", "Pickle Cebola", "Feta", "Feta", "Feta"], protein: ["Não leva"], sauce_final: ["Manjericão e Hortelã"], crispy: ["Não leva"], sesame: ["Não"] },
-            { id: 12, category: "GREEN", name: "Cozy Chicken 🥗", base: ["Coconut Basmati", "Espinafres", "Espinafres"], sauce_base: ["Azeite de Limão"], greens: ["Brócolis", "Batata Doce com Alecrim", "Couve roxa", "Courgette"], protein: ["Frango Vietnamita", "Frango Vietnamita", "Frango Vietnamita"], sauce_final: ["Soja"], crispy: ["Não leva"], sesame: ["Não"] }
+            { id: 12, category: "GREEN", name: "Cozy Chicken 🥗", base: ["Coconut Basmati", "Espinafres", "Espinafres"], sauce_base: ["Azeite de Limão"], greens: ["Brócolis", "Batata Doce com Alecrim", "Couve roxa", "Courgette"], protein: ["Frango Vietnamita", "Frango Vietnamita", "Frango Vietnamita"], sauce_final: ["Soja"], crispy: ["Não leva"], sesame: ["Não"] },
+
+            // SMOOTHIES (NOVOS)
+            { id: 13, category: "SMOOTHIE", name: "Into the Sun 💛", smoothie_liquid: ["Leite de Coco"], smoothie_amount: ["150ml"], smoothie_ingredients: ["Manga 40g", "Manga 40g", "Ananás 30g", "Ananás 30g"], smoothie_ice: ["Gelo 60g"], smoothie_mode: ["Modo E"] },
+            { id: 14, category: "SMOOTHIE", name: "Sweet Pink 🩷", smoothie_liquid: ["Leite"], smoothie_amount: ["150ml"], smoothie_ingredients: ["Morango", "Morango", "Morango", "Morango", "Banana 90g"], smoothie_ice: ["Gelo 60g"], smoothie_mode: ["Modo E"] },
+            { id: 15, category: "SMOOTHIE", name: "So Green 💚", smoothie_liquid: ["Suco de Maçã"], smoothie_amount: ["250ml"], smoothie_ingredients: ["Pepino 20g", "Abacate 45g", "Espinafre 30g", "Sumo de Lima 25g", "Gengibre 5g"], smoothie_ice: ["Gelo 60g"], smoothie_mode: ["Modo E"] }
         ];
 
-        const PHASES = [
+        // Definição das Fases para Bowls
+        const PHASES_BOWL = [
             { key: "base", title: "1️⃣ – Base:", hint: "Escolha as bases." },
             { key: "sauce_base", title: "2️⃣ – Molho da base:", hint: "Escolha o molho." },
             { key: "greens", title: "3️⃣ – Greens:", hint: "Escolha os greens." },
@@ -130,6 +149,15 @@
             { key: "sauce_final", title: "5️⃣ – Molho final:", hint: "Escolha os molhos." },
             { key: "crispy", title: "6️⃣ – Crispy:", hint: "Escolha UM crispy." }, 
             { key: "sesame", title: "7️⃣ – Sésamo:", hint: "Essa Bowl leva sésamo?" },
+        ];
+
+        // Definição das Fases para Smoothies
+        const PHASES_SMOOTHIE = [
+            { key: "smoothie_liquid", title: "1️⃣ – Líquido:", hint: "Qual a base líquida?" },
+            { key: "smoothie_amount", title: "2️⃣ – Quantidade:", hint: "Qual o volume?" },
+            { key: "smoothie_ingredients", title: "3️⃣ – Ingredientes:", hint: "Quais frutas/verduras?" },
+            { key: "smoothie_ice", title: "4️⃣ – Gelo:", hint: "Qual a quantidade de gelo?" },
+            { key: "smoothie_mode", title: "5️⃣ – Blender:", hint: "Qual o modo de bater?" },
         ];
 
         // --- LÓGICA DE SOM ---
@@ -327,6 +355,12 @@
             const [timer, setTimer] = React.useState(20);
             const [timerEmoji, setTimerEmoji] = React.useState("😃");
             const [errorDetails, setErrorDetails] = React.useState([]);
+
+            // Helper para obter as fases corretas dependendo da categoria
+            const getCurrentPhases = () => {
+                if (selectedRecipe?.category === "SMOOTHIE") return PHASES_SMOOTHIE;
+                return PHASES_BOWL;
+            };
             
             // Timer
             React.useEffect(() => {
@@ -340,13 +374,17 @@
             // Opções da fase
             React.useEffect(() => {
                 if (gameState === "PLAYING" && selectedRecipe) {
-                    const phaseKey = PHASES[currentPhaseIndex].key;
+                    const activePhases = getCurrentPhases();
+                    const phaseKey = activePhases[currentPhaseIndex].key;
+                    
                     const fullList = getFullIngredientList(phaseKey);
                     const requiredIngs = selectedRecipe[phaseKey];
                     const requiredSet = new Set(requiredIngs);
                     const requiredUnique = [...requiredSet];
                     const distractors = fullList.filter(ing => !requiredSet.has(ing));
                     const shuffledDistractors = shuffleArray([...distractors]);
+                    
+                    // Ajuste de slots para smoothies vs bowls se necessário, mas 9 funciona bem.
                     const slotsNeeded = Math.max(0, 9 - requiredUnique.length);
                     const selectedDistractors = shuffledDistractors.slice(0, slotsNeeded);
                     const finalOptions = shuffleArray([...requiredUnique, ...selectedDistractors]);
@@ -371,7 +409,8 @@
 
             const handleSelection = (ingredient) => {
                 setTimer(20);
-                const phase = PHASES[currentPhaseIndex];
+                const activePhases = getCurrentPhases();
+                const phase = activePhases[currentPhaseIndex];
                 const requiredList = selectedRecipe[phase.key];
                 const isCorrect = requiredList.includes(ingredient);
                 playSound(isCorrect ? "happy" : "sad");
@@ -382,7 +421,7 @@
                 if (newSelections.length === selectedRecipe[phase.key].length) {
                     const updatedAll = { ...allSelections, [phase.key]: newSelections };
                     setAllSelections(updatedAll);
-                    if (currentPhaseIndex < PHASES.length - 1) {
+                    if (currentPhaseIndex < activePhases.length - 1) {
                         setTimeout(() => { setCurrentPhaseIndex(prev => prev + 1); setCurrentSelections([]); setTimer(20); }, 300);
                     } else {
                         validateGame(updatedAll);
@@ -394,7 +433,8 @@
 
             const validateGame = (finalSelections) => {
                 let errors = [];
-                PHASES.forEach(phase => {
+                const activePhases = getCurrentPhases();
+                activePhases.forEach(phase => {
                     const required = [...selectedRecipe[phase.key]].sort();
                     const selected = [...finalSelections[phase.key]].sort();
                     if (JSON.stringify(required) !== JSON.stringify(selected)) errors.push(`Erro em ${phase.title.replace(":", "")}. Era: ${required.join(", ")}`);
@@ -414,6 +454,7 @@
 
             const getFullIngredientList = (key) => {
                  switch(key) {
+                    // BOWLS
                     case 'base': return INGREDIENTS_DB.bases;
                     case 'sauce_base': return INGREDIENTS_DB.sauces_base;
                     case 'greens': return INGREDIENTS_DB.greens;
@@ -421,8 +462,22 @@
                     case 'sauce_final': return INGREDIENTS_DB.sauces_final;
                     case 'crispy': return INGREDIENTS_DB.crispies;
                     case 'sesame': return INGREDIENTS_DB.sesame;
+                    
+                    // SMOOTHIES
+                    case 'smoothie_liquid': return INGREDIENTS_DB.smoothie_liquid;
+                    case 'smoothie_amount': return INGREDIENTS_DB.smoothie_amount;
+                    case 'smoothie_ingredients': return INGREDIENTS_DB.smoothie_ingredients;
+                    case 'smoothie_ice': return INGREDIENTS_DB.smoothie_ice;
+                    case 'smoothie_mode': return INGREDIENTS_DB.smoothie_mode;
+                    
                     default: return [];
                 }
+            };
+
+            const getCurrentPhaseData = () => {
+                if(!selectedRecipe) return {};
+                const phases = getCurrentPhases();
+                return phases[currentPhaseIndex];
             };
 
             return (
@@ -448,11 +503,15 @@
                                     <span className="text-4xl mb-2">🥗</span>
                                     <span className="text-xl font-bold">Green Bowls</span>
                                 </button>
+                                 <button onClick={() => setMenuCategory("SMOOTHIE")} className="bg-pastel-yellow text-slate-800 p-6 rounded-2xl shadow-lg hover:bg-yellow-200 transition-all transform hover:scale-105 flex flex-col items-center">
+                                    <span className="text-4xl mb-2">🥤</span>
+                                    <span className="text-xl font-bold">Smoothies</span>
+                                </button>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-2 animate-fade-in">
                                 <button onClick={() => setMenuCategory(null)} className="mb-2 text-pastel-blue-500 font-bold flex items-center gap-2 hover:bg-pastel-blue-100/50 p-2 rounded-lg"><IconArrowLeft size={16} color="#404FC2"/> Voltar</button>
-                                <h3 className="font-bold text-pastel-blue-500 mb-2 uppercase tracking-wide">{menuCategory} BOWLS</h3>
+                                <h3 className="font-bold text-pastel-blue-500 mb-2 uppercase tracking-wide">{menuCategory} {menuCategory === "SMOOTHIE" ? "" : "BOWLS"}</h3>
                                 {RECIPES.filter(r => r.category === menuCategory).map(recipe => (
                                     <button key={recipe.id} onClick={() => startGame(recipe)} disabled={gameState === "PLAYING" && selectedRecipe?.id !== recipe.id} className={`p-3 rounded-xl shadow-sm text-left font-semibold transition-all ${selectedRecipe?.id === recipe.id ? "bg-pastel-blue-300 text-white scale-105" : "bg-pastel-blue-100/80 hover:bg-pastel-blue-200/80 text-slate-700"} ${gameState === "PLAYING" && selectedRecipe?.id !== recipe.id ? "opacity-50 hidden md:block" : ""}`}>
                                         {recipe.name}
@@ -472,15 +531,15 @@
                                 </div>
                                 <div className="flex justify-between items-center p-4 border-b border-pastel-blue-200/50 bg-pastel-blue-100/40 shrink-0">
                                     <div>
-                                        <h2 className="text-xl md:text-3xl font-bold text-pastel-blue-500">{PHASES[currentPhaseIndex].title}</h2>
+                                        <h2 className="text-xl md:text-3xl font-bold text-pastel-blue-500">{getCurrentPhaseData().title}</h2>
                                         
                                         <p className="text-xs md:text-base text-slate-600">
-                                            {selectedRecipe[PHASES[currentPhaseIndex].key].length > 1 
-                                                ? `Escolha ${selectedRecipe[PHASES[currentPhaseIndex].key].length} opções.` 
-                                                : PHASES[currentPhaseIndex].hint}
+                                            {selectedRecipe[getCurrentPhaseData().key].length > 1 
+                                                ? `Escolha ${selectedRecipe[getCurrentPhaseData().key].length} opções.` 
+                                                : getCurrentPhaseData().hint}
                                         </p>
 
-                                        <div className="text-xs md:text-sm mt-1 font-bold text-pastel-blue-400">Selecionado: {currentSelections.length} / {selectedRecipe[PHASES[currentPhaseIndex].key].length}</div>
+                                        <div className="text-xs md:text-sm mt-1 font-bold text-pastel-blue-400">Selecionado: {currentSelections.length} / {selectedRecipe[getCurrentPhaseData().key].length}</div>
                                     </div>
                                     <div className="flex flex-col items-center min-w-[60px]"><span className="text-3xl md:text-4xl">{timerEmoji}</span><span className="text-xl md:text-2xl font-bold text-pastel-blue-500">{timer}s</span></div>
                                 </div>
@@ -511,7 +570,7 @@
                                     <IconCheck size={40} /> Perfeita!
                                 </h2>
                                 
-                                <p className="text-slate-600 mb-8 font-medium">Você montou a Bowl corretamente.</p>
+                                <p className="text-slate-600 mb-8 font-medium">Você completou corretamente.</p>
 
                                 <button onClick={resetToHome} className="mt-4 bg-pastel-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:bg-pastel-blue-400 transition-all active:scale-95 flex items-center justify-center gap-2 w-full">
                                     <IconHome size={24}/> Voltar ao Início
@@ -541,7 +600,7 @@
                     </div>
                      {/* VERSION LABEL */}
        <div className="fixed bottom-1 right-2 text-xs text-slate-500/60 font-sans z-50 pointer-events-none select-none">
-           v1.18 BETA
+           v2.01 BETA
        </div>
                 </div>
             );
