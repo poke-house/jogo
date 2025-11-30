@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poke House – Treino v2.08 BETA</title>
+    <title>Poke House – Treino v2.09 BETA</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -82,9 +82,24 @@
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         );
 
+        // --- MENSAGENS ALEATÓRIAS ---
+        const SUCCESS_MESSAGES = [
+            "Ficou perfeita! 🤩",
+            "Estudou direitinho ein! ✅",
+            "Ficou igualzinha ao SOP! 📚",
+            "Que mente de titânio! 🧠"
+        ];
+
+        const FAIL_MESSAGES = [
+            "Algo não tá legal. 🤨",
+            "O cliente vai reclamar. 🤦🏻‍♂️",
+            "Precisamos revisar o SOP. 📚"
+        ];
+
         // --- HISTÓRICO DE VERSÕES ---
         const CHANGELOG = [
-            { version: "2.08", date: "Atual", changes: ["Atualização de UX: Mar e surfistas. Inserção de peixes.", "Correção do fundo rosa aparecendo no mar.", "Peixes aparecem por 2s e sobem sumindo."] },
+            { version: "2.09", date: "Atual", changes: ["Novas mensagens aleatórias de feedback (Sucesso e Erro)."] },
+            { version: "2.08", date: "Anterior", changes: ["Atualização de UX: Mar e surfistas. Inserção de peixes.", "Correção do fundo rosa aparecendo no mar.", "Peixes aparecem por 2s e sobem sumindo."] },
             { version: "2.06", date: "Anterior", changes: ["Atualização da receita Vegetarian (Amêndoas e Sem Sésamo)."] },
             { version: "2.05", date: "Anterior", changes: ["Menu de 'Versão' clicável com histórico de alterações."] },
             { version: "2.04", date: "Anterior", changes: ["Lógica do timer ajustada (emojis de tensão)", "Timer fica vermelho nos últimos 6 segundos."] },
@@ -184,9 +199,6 @@
                 const seaTopHeightRatio = 0.16; 
                 const skyColor = "#FFE6F2";
 
-                // Camadas do mar ajustadas para evitar o fundo rosa
-                // Mar 2 (Azul Claro) agora vai até o fundo da tela (1.0), cobrindo tudo abaixo do horizonte
-                // Mar 1 (Azul Escuro) é desenhado por cima, começando mais baixo
                 const seaLayers = [
                     { name: "Mar 2 (Topo - Background)", color: "#A0C4FF", startYRatio: skyHeightRatio, endYRatio: 1.0, wave: { amplitude: 5, wavelength: 90, speed: 0.3 } },
                     { name: "Mar 1 (Fundo - Foreground)", color: "#80A8FF", startYRatio: skyHeightRatio + seaTopHeightRatio, endYRatio: 1.0, wave: { amplitude: 8, wavelength: 120, speed: 0.2 } }
@@ -204,9 +216,7 @@
                     const horizonY = canvas.height * skyHeightRatio;
                     const seaBottomY = canvas.height;
                     const spawnX = Math.random() * canvas.width;
-                    // Peixe nasce em qualquer lugar no mar
                     const spawnY = horizonY + 50 + Math.random() * (seaBottomY - horizonY - 50);
-                    // Vida de 120 frames (~2 segundos a 60fps)
                     return { x: spawnX, y: spawnY, speedY: 0.5, sprite: FISH_EMOJIS[Math.floor(Math.random() * FISH_EMOJIS.length)], sizeScale: 0.5 + Math.random() * 0.3, active: true, life: 120, maxLife: 120 };
                 };
 
@@ -216,10 +226,8 @@
                 const loop = () => {
                     time += 0.01; ctx.clearRect(0, 0, canvas.width, canvas.height); const h = canvas.height; const horizonY = h * skyHeightRatio; const seaBottomY = h;
                     
-                    // 1. Céu
-                    ctx.fillStyle = skyColor; ctx.fillRect(0, 0, canvas.width, horizonY + 20); // +20 margem de segurança
+                    ctx.fillStyle = skyColor; ctx.fillRect(0, 0, canvas.width, horizonY + 20);
 
-                    // 2. Mar (Desenhando camadas)
                     seaLayers.forEach(layer => {
                         const startY = h * layer.startYRatio; const endY = h * layer.endYRatio;
                         ctx.fillStyle = layer.color; ctx.beginPath(); ctx.moveTo(0, endY);
@@ -227,12 +235,10 @@
                         ctx.lineTo(canvas.width, endY); ctx.lineTo(0, endY); ctx.fill(); if(layer.endYRatio === 1.0) ctx.fillRect(0, endY - 1, canvas.width, h - endY + 1);
                     });
                     
-                    // 3. Surfistas
                     if (surfers.length < 2 && Math.random() < 0.005) { surfers.push(createSurfer()); }
                     surfers.forEach(f => updateSurfer(f, canvas.width, canvas.height, horizonY, seaBottomY, time));
                     surfers = surfers.filter(f => f.active); surfers.forEach(f => drawSurferTrail(ctx, f)); surfers.forEach(f => drawSurferSprite(ctx, f));
 
-                    // 4. Peixes
                     if (fish.length < 3 && Math.random() < 0.01) { fish.push(createFish()); }
                     fish.forEach(f => updateFish(f));
                     fish = fish.filter(f => f.active); fish.forEach(f => drawFishSprite(ctx, f));
@@ -255,18 +261,15 @@
             if(f.x < -200 || f.x > w + 200) { f.active = false; }
         }
 
-        // Lógica de peixe: Sobe e desaparece
         function updateFish(f) {
-            f.y -= 0.3; // Sobe devagar
-            f.life--; 
+            f.y -= 0.3; f.life--; 
             if (f.life <= 0) f.active = false;
         }
 
         function drawSurferTrail(ctx, f) { const trailSize = 25 * f.sizeScale; f.trail.forEach((point, index) => { const opacity = (index / f.trail.length) * 0.5; ctx.fillStyle = `rgba(220, 245, 255, ${opacity})`; ctx.fillRect(point.x + 10, point.y + 20, trailSize, trailSize * 0.6); }); }
         function drawSurferSprite(ctx, f){ ctx.font=`${Math.max(24,f.sizeScale*40)}px sans-serif`; ctx.shadowColor = "rgba(0,80,150,0.2)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 5; ctx.fillText(f.sprite,f.x,f.y); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; }
-        
         function drawFishSprite(ctx, f) {
-            const opacity = f.life / f.maxLife; // Fade out
+            const opacity = f.life / f.maxLife; 
             ctx.globalAlpha = opacity;
             ctx.font=`${Math.max(16,f.sizeScale*30)}px sans-serif`; 
             ctx.fillText(f.sprite, f.x, f.y);
@@ -320,6 +323,7 @@
             const [timerEmoji, setTimerEmoji] = React.useState("😃");
             const [errorDetails, setErrorDetails] = React.useState([]);
             const [showChangelog, setShowChangelog] = React.useState(false);
+            const [resultMessage, setResultMessage] = React.useState("");
 
             const getCurrentPhases = () => {
                 if (selectedRecipe?.category === "SMOOTHIE") return PHASES_SMOOTHIE;
@@ -370,7 +374,6 @@
                 const phase = activePhases[currentPhaseIndex];
                 const requiredList = selectedRecipe[phase.key];
                 
-                // Validação simplificada: Apenas verifica se o ingrediente existe na lista da fase
                 const isCorrect = requiredList.includes(ingredient);
                 playSound(isCorrect ? "happy" : "sad");
 
@@ -411,9 +414,15 @@
 
             const handleGameOver = (success, errors) => {
                 if (success) {
-                    setGameState("RESULT_SUCCESS"); playSound("happy"); confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                    setGameState("RESULT_SUCCESS");
+                    playSound("happy");
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                    setResultMessage(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)]);
                 } else {
-                    setErrorDetails(errors); setGameState("RESULT_FAIL"); playSound("sad");
+                    setErrorDetails(errors);
+                    setGameState("RESULT_FAIL");
+                    playSound("sad");
+                    setResultMessage(FAIL_MESSAGES[Math.floor(Math.random() * FAIL_MESSAGES.length)]);
                 }
             };
 
@@ -519,9 +528,9 @@
                         {gameState === "RESULT_SUCCESS" && (
                             <div className="text-center p-10 bg-pastel-blue-100/95 rounded-3xl shadow-2xl animate-bounce-in mx-4 border border-white/50 max-w-md w-full">
                                 <h2 className="text-3xl md:text-4xl font-extrabold text-pastel-green mb-6 drop-shadow-sm flex items-center justify-center gap-2">
-                                    <IconCheck size={40} /> Perfeita!
+                                    PARABÉNS!
                                 </h2>
-                                <p className="text-slate-600 mb-8 font-medium">Você completou corretamente.</p>
+                                <p className="text-slate-600 mb-8 font-medium text-xl">{resultMessage}</p>
                                 <button onClick={resetToHome} className="mt-4 bg-pastel-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:bg-pastel-blue-400 transition-all active:scale-95 flex items-center justify-center gap-2 w-full">
                                     <IconHome size={24}/> Voltar ao Início
                                 </button>
@@ -530,8 +539,10 @@
 
                         {gameState === "RESULT_FAIL" && (
                             <div className="text-center p-6 md:p-10 bg-pastel-blue-100/95 rounded-3xl shadow-2xl animate-shake mx-4 max-h-[80vh] overflow-y-auto custom-scroll border border-white/50">
-                                <h2 className="text-2xl md:text-3xl font-extrabold text-pastel-pink-500 mb-4">Eita... 😕</h2>
-                                <p className="text-base md:text-lg text-slate-700 mb-6">Alguns ingredientes estão incorretos!</p>
+                                <h2 className="text-2xl md:text-3xl font-extrabold text-pastel-pink-500 mb-4">
+                                    EPA! 😟
+                                </h2>
+                                <p className="text-base md:text-lg text-slate-700 mb-6">{resultMessage}</p>
                                 <div className="bg-white/60 p-4 rounded-lg text-left text-sm text-pastel-pink-500 mb-6 border border-pastel-pink-200">{errorDetails.map((e, i) => <div key={i} className="mb-1">• {e}</div>)}</div>
                                 <button onClick={resetToHome} className="bg-pastel-blue-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-pastel-blue-400 transition-transform active:scale-95 flex items-center justify-center gap-2 mx-auto">
                                     <IconRotate size={20} color="#FFF"/> Tentar Novamente
@@ -555,7 +566,7 @@
                             onClick={() => setShowChangelog(true)}
                             className="text-xs text-slate-500/60 font-sans hover:text-pastel-blue-500 hover:underline transition-colors select-none"
                         >
-                            v2.08 BETA
+                            v2.09 BETA
                         </button>
                     </div>
                     
