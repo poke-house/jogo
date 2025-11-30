@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poke House – Treino v2.07 BETA</title>
+    <title>Poke House – Treino v2.08 BETA</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -84,7 +84,7 @@
 
         // --- HISTÓRICO DE VERSÕES ---
         const CHANGELOG = [
-            { version: "2.07", date: "Atual", changes: ["Atualização de UX: Mar e surfistas. Inserção de peixes.", "Movimento dos surfistas ajustado para trepidação.", "Peixes aparecem e somem no mar."] },
+            { version: "2.08", date: "Atual", changes: ["Atualização de UX: Mar e surfistas. Inserção de peixes.", "Correção do fundo rosa aparecendo no mar.", "Peixes aparecem por 2s e sobem sumindo."] },
             { version: "2.06", date: "Anterior", changes: ["Atualização da receita Vegetarian (Amêndoas e Sem Sésamo)."] },
             { version: "2.05", date: "Anterior", changes: ["Menu de 'Versão' clicável com histórico de alterações."] },
             { version: "2.04", date: "Anterior", changes: ["Lógica do timer ajustada (emojis de tensão)", "Timer fica vermelho nos últimos 6 segundos."] },
@@ -92,9 +92,7 @@
             { version: "2.01", date: "Anterior", changes: ["Criação da categoria SMOOTHIES", "Lógica separada para Bowls vs Smoothies", "Novos ingredientes e fases específicas"] },
             { version: "1.18", date: "Anterior", changes: ["Remoção do sistema de Pontuação e Nome", "Simplificação da tela de sucesso"] },
             { version: "1.16", date: "Anterior", changes: ["Ajuste no movimento dos surfistas (Zigzag lento)", "Correção de colisão com o horizonte"] },
-            { version: "1.15", date: "Anterior", changes: ["Ajuste nas proporções do cenário (Céu 60%, Mar 40%)", "Limpeza de ingredientes duplicados"] },
-            { version: "1.12", date: "Anterior", changes: ["Correção 'Tomate' vs 'Tomate Cherry'", "Ajuste no ingrediente 'Hortelã'"] },
-            { version: "1.11", date: "Anterior", changes: ["Dica inteligente para 'The Caesar' (quantidade)", "Novo fundo do mar com surfistas"] }
+            { version: "1.15", date: "Anterior", changes: ["Ajuste nas proporções do cenário (Céu 60%, Mar 40%)", "Limpeza de ingredientes duplicados"] }
         ];
 
         // --- DADOS DO JOGO ---
@@ -116,7 +114,6 @@
         const RECIPES = [
             { id: 1, category: "HOUSE", name: "Sunny Salmon 🌞", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Abacate", "Couve roxa", "Edamame"], protein: ["Juicy Salmon", "Juicy Salmon"], sauce_final: ["Especial", "Creme de Abacate"], crispy: ["Não leva"], sesame: ["Sim"] },
             { id: 2, category: "HOUSE", name: "Spicy Tuna 🐟", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Couve roxa", "Pepino", "Cenoura"], protein: ["Atum", "Atum"], sauce_final: ["Ponzu", "Spicy Peanuts"], crispy: ["Cebola frita"], sesame: ["Sim"] },
-            // VEGETARIAN ATUALIZADO
             { id: 3, category: "HOUSE", name: "Vegetarian 🌿", base: ["Arroz basmati", "Arroz basmati"], sauce_base: ["Não leva"], greens: ["Abacate", "Hummus", "Hummus", "Tomate Cherry", "Pepino", "Azeitonas"], protein: ["Não leva"], sauce_final: ["Manjericão e Hortelã"], crispy: ["Amêndoa"], sesame: ["Não"] },
             { id: 4, category: "HOUSE", name: "Chicken 🐔", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Não leva"], greens: ["Couve roxa", "Tomate Cherry", "Courgette"], protein: ["Frango Teriyaki", "Frango Teriyaki"], sauce_final: ["Teriyaki", "Sriracha Mayo"], crispy: ["Amêndoa"], sesame: ["Sim"] },
             { id: 5, category: "HOUSE", name: "Fire Salmon 🔥", base: ["Arroz de sushi", "Arroz de sushi"], sauce_base: ["Sriracha Mayo"], greens: ["Jalapeños", "Tomate Cherry", "Pepino"], protein: ["Salmão", "Salmão"], sauce_final: ["Sriracha Mayo"], crispy: ["Cebola frita"], sesame: ["Sim"] },
@@ -182,23 +179,35 @@
                 if (!active) return;
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext("2d");
-                const skyHeightRatio = 0.60; const seaTopHeightRatio = 0.16; const skyColor = "#FFE6F2";
-                const seaLayers = [ { name: "Mar 2 (Topo)", color: "#A0C4FF", startYRatio: skyHeightRatio, endYRatio: skyHeightRatio + seaTopHeightRatio, wave: { amplitude: 5, wavelength: 90, speed: 0.3 } }, { name: "Mar 1 (Fundo)", color: "#80A8FF", startYRatio: skyHeightRatio + seaTopHeightRatio, endYRatio: 1.0, wave: { amplitude: 8, wavelength: 120, speed: 0.2 } } ];
+                
+                const skyHeightRatio = 0.60; 
+                const seaTopHeightRatio = 0.16; 
+                const skyColor = "#FFE6F2";
+
+                // Camadas do mar ajustadas para evitar o fundo rosa
+                // Mar 2 (Azul Claro) agora vai até o fundo da tela (1.0), cobrindo tudo abaixo do horizonte
+                // Mar 1 (Azul Escuro) é desenhado por cima, começando mais baixo
+                const seaLayers = [
+                    { name: "Mar 2 (Topo - Background)", color: "#A0C4FF", startYRatio: skyHeightRatio, endYRatio: 1.0, wave: { amplitude: 5, wavelength: 90, speed: 0.3 } },
+                    { name: "Mar 1 (Fundo - Foreground)", color: "#80A8FF", startYRatio: skyHeightRatio + seaTopHeightRatio, endYRatio: 1.0, wave: { amplitude: 8, wavelength: 120, speed: 0.2 } }
+                ];
                 
                 let surfers = []; const SURFER_EMOJIS = ['🏄‍♂️', '🏄‍♀️'];
                 let fish = []; const FISH_EMOJIS = ['🐟', '🐠', '🐡'];
 
                 const createSurfer = () => {
                     const startSide = Math.random() > 0.5 ? 'LEFT' : 'RIGHT'; const horizonY = canvas.height * skyHeightRatio; const minY = horizonY + 50; const maxY = canvas.height - 50; const spawnY = minY + Math.random() * (maxY - minY);
-                    return { x: startSide === 'LEFT' ? -150 : canvas.width + 150, y: spawnY, speedX: (startSide === 'LEFT' ? 1 : -1) * (0.3 + Math.random() * 0.3), verticalDir: Math.random() > 0.5 ? 1 : -1, verticalSpeedFactor: 0.5 + Math.random() * 0.5, zigzagTimer: 0, zigzagInterval: 30 + Math.floor(Math.random() * 30), sprite: SURFER_EMOJIS[Math.floor(Math.random() * SURFER_EMOJIS.length)], sizeScale: 0.7 + Math.random() * 0.6, active: true, trail: [] };
+                    return { x: startSide === 'LEFT' ? -150 : canvas.width + 150, y: spawnY, speedX: (startSide === 'LEFT' ? 1 : -1) * (0.4 + Math.random() * 0.4), verticalDir: Math.random() > 0.5 ? 1 : -1, verticalSpeedFactor: 0.3 + Math.random() * 0.3, zigzagTimer: 0, zigzagInterval: 150 + Math.floor(Math.random() * 150), sprite: SURFER_EMOJIS[Math.floor(Math.random() * SURFER_EMOJIS.length)], sizeScale: 0.7 + Math.random() * 0.6, active: true, trail: [] };
                 };
 
                 const createFish = () => {
                     const horizonY = canvas.height * skyHeightRatio;
                     const seaBottomY = canvas.height;
                     const spawnX = Math.random() * canvas.width;
-                    const spawnY = horizonY + 50 + Math.random() * (seaBottomY - horizonY - 100);
-                    return { x: spawnX, y: spawnY, speedX: (Math.random() - 0.5) * 0.5, speedY: (Math.random() - 0.5) * 0.2, sprite: FISH_EMOJIS[Math.floor(Math.random() * FISH_EMOJIS.length)], sizeScale: 0.3 + Math.random() * 0.3, active: true, fade: 1.0 };
+                    // Peixe nasce em qualquer lugar no mar
+                    const spawnY = horizonY + 50 + Math.random() * (seaBottomY - horizonY - 50);
+                    // Vida de 120 frames (~2 segundos a 60fps)
+                    return { x: spawnX, y: spawnY, speedY: 0.5, sprite: FISH_EMOJIS[Math.floor(Math.random() * FISH_EMOJIS.length)], sizeScale: 0.5 + Math.random() * 0.3, active: true, life: 120, maxLife: 120 };
                 };
 
                 const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
@@ -206,19 +215,26 @@
                 let animationFrameId; let time = 0;
                 const loop = () => {
                     time += 0.01; ctx.clearRect(0, 0, canvas.width, canvas.height); const h = canvas.height; const horizonY = h * skyHeightRatio; const seaBottomY = h;
-                    ctx.fillStyle = skyColor; ctx.fillRect(0, 0, canvas.width, horizonY + 10);
+                    
+                    // 1. Céu
+                    ctx.fillStyle = skyColor; ctx.fillRect(0, 0, canvas.width, horizonY + 20); // +20 margem de segurança
+
+                    // 2. Mar (Desenhando camadas)
                     seaLayers.forEach(layer => {
                         const startY = h * layer.startYRatio; const endY = h * layer.endYRatio;
                         ctx.fillStyle = layer.color; ctx.beginPath(); ctx.moveTo(0, endY);
                         for (let x = 0; x <= canvas.width; x += 10) { const waveY = startY + Math.sin(x / layer.wave.wavelength + time * layer.wave.speed) * layer.wave.amplitude; ctx.lineTo(x, waveY); }
                         ctx.lineTo(canvas.width, endY); ctx.lineTo(0, endY); ctx.fill(); if(layer.endYRatio === 1.0) ctx.fillRect(0, endY - 1, canvas.width, h - endY + 1);
                     });
+                    
+                    // 3. Surfistas
                     if (surfers.length < 2 && Math.random() < 0.005) { surfers.push(createSurfer()); }
                     surfers.forEach(f => updateSurfer(f, canvas.width, canvas.height, horizonY, seaBottomY, time));
                     surfers = surfers.filter(f => f.active); surfers.forEach(f => drawSurferTrail(ctx, f)); surfers.forEach(f => drawSurferSprite(ctx, f));
 
+                    // 4. Peixes
                     if (fish.length < 3 && Math.random() < 0.01) { fish.push(createFish()); }
-                    fish.forEach(f => updateFish(f, canvas.height, horizonY));
+                    fish.forEach(f => updateFish(f));
                     fish = fish.filter(f => f.active); fish.forEach(f => drawFishSprite(ctx, f));
 
                     animationFrameId = requestAnimationFrame(loop);
@@ -229,6 +245,7 @@
             if (!active) return null;
             return <canvas ref={canvasRef} style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', zIndex:-1}} />;
         };
+        
         function updateSurfer(f, w, h, horizonY, seaBottomY, t){ 
             f.trail.push({x: f.x, y: f.y}); if (f.trail.length > 30) f.trail.shift();
             f.x += f.speedX; f.zigzagTimer++;
@@ -237,14 +254,24 @@
             f.y += Math.abs(f.speedX) * f.verticalDir * f.verticalSpeedFactor; f.y += Math.sin(t * 2 + f.x * 0.01) * 0.5;
             if(f.x < -200 || f.x > w + 200) { f.active = false; }
         }
-        function updateFish(f, h, horizonY){
-            f.x += f.speedX; f.y += f.speedY;
-            if (f.y < horizonY + 30) f.y = horizonY + 30;
-            if (f.y > h) f.active = false;
+
+        // Lógica de peixe: Sobe e desaparece
+        function updateFish(f) {
+            f.y -= 0.3; // Sobe devagar
+            f.life--; 
+            if (f.life <= 0) f.active = false;
         }
+
         function drawSurferTrail(ctx, f) { const trailSize = 25 * f.sizeScale; f.trail.forEach((point, index) => { const opacity = (index / f.trail.length) * 0.5; ctx.fillStyle = `rgba(220, 245, 255, ${opacity})`; ctx.fillRect(point.x + 10, point.y + 20, trailSize, trailSize * 0.6); }); }
         function drawSurferSprite(ctx, f){ ctx.font=`${Math.max(24,f.sizeScale*40)}px sans-serif`; ctx.shadowColor = "rgba(0,80,150,0.2)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 5; ctx.fillText(f.sprite,f.x,f.y); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; }
-        function drawFishSprite(ctx, f){ ctx.font=`${Math.max(12,f.sizeScale*30)}px sans-serif`; ctx.fillStyle = `rgba(0,0,0,${f.fade})`; ctx.fillText(f.sprite,f.x,f.y); }
+        
+        function drawFishSprite(ctx, f) {
+            const opacity = f.life / f.maxLife; // Fade out
+            ctx.globalAlpha = opacity;
+            ctx.font=`${Math.max(16,f.sizeScale*30)}px sans-serif`; 
+            ctx.fillText(f.sprite, f.x, f.y);
+            ctx.globalAlpha = 1.0;
+        }
 
         // --- COMPONENTE MODAL DE CHANGELOG ---
         const ChangelogModal = ({ onClose }) => (
@@ -528,7 +555,7 @@
                             onClick={() => setShowChangelog(true)}
                             className="text-xs text-slate-500/60 font-sans hover:text-pastel-blue-500 hover:underline transition-colors select-none"
                         >
-                            v2.07 BETA
+                            v2.08 BETA
                         </button>
                     </div>
                     
