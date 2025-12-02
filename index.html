@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poke House – Treino v3.03 BETA</title>
+    <title>Poke House – Treino v3.04 BETA</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -24,6 +24,7 @@
                         'bounce-in': 'bounceIn 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) both',
                         'shake': 'shake 0.8s cubic-bezier(.36,.07,.19,.97) both',
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'pulse-fast': 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                     keyframes: {
                         bounceIn: {
@@ -98,14 +99,13 @@
 
         // --- HISTÓRICO DE VERSÕES ---
         const CHANGELOG = [
-            { version: "3.03", date: "Atual", changes: ["Ajuste no Easter Egg nº 1: Sai apenas um ingrediente por clique."] },
+            { version: "3.04", date: "Atual", changes: ["Inserção do Easter Egg nº 2 (Desktop): 'Live Pink!'.", "Sequência: ↑ ↑ p o k e ↑ ↑"] },
+            { version: "3.03", date: "Anterior", changes: ["Ajuste no Easter Egg nº 1: Sai apenas um ingrediente por clique."] },
             { version: "3.02", date: "Anterior", changes: ["Peixes agora pulam do mar e voltam (movimento parabólico).", "Remoção do rastro branco dos surfistas.", "Opacidade de peixes e surfistas fixada em 100%.", "Cor do título 'PARABÉNS!' alterada para azul celeste médio."] },
             { version: "3.01", date: "Anterior", changes: ["Implementação de tamanhos (Regular/Large) para House Bowls.", "Reformulação completa das fases e quantidades."] },
             { version: "2.12", date: "Anterior", changes: ["Inserção do 1° easter egg."] },
             { version: "2.11", date: "Anterior", changes: ["Aumento do tamanho do logo na versão mobile."] },
-            { version: "2.10", date: "Anterior", changes: ["Adição da 'bowl pulante' 🥗 na tela inicial do modo mobile."] },
-            { version: "2.09", date: "Anterior", changes: ["Novas mensagens aleatórias de feedback (Sucesso e Erro)."] },
-            { version: "2.08", date: "Anterior", changes: ["Atualização de UX: Mar e surfistas. Inserção de peixes.", "Correção do fundo rosa aparecendo no mar.", "Peixes aparecem por 2s e sobem sumindo."] }
+            { version: "2.10", date: "Anterior", changes: ["Adição da 'bowl pulante' 🥗 na tela inicial do modo mobile."] }
         ];
 
         // --- DADOS DO JOGO ---
@@ -249,7 +249,7 @@
 
         // --- EASTER EGG (FOOD RAIN) ---
         const EASTER_EGG_EMOJIS = ['🥑','🍅','🫛','🥕','🫒','🌽','🧅','🥦','🍓','🥭','🍍','🍣','🍤','🍪','🥗','🧀','🥚','🥔'];
-        const FoodRain = ({ active, trigger }) => {
+        const FoodRain = ({ active, trigger, quantity = 1 }) => {
             const canvasRef = React.useRef(null);
             const particlesRef = React.useRef([]);
             
@@ -258,25 +258,14 @@
                 const canvas = canvasRef.current;
                 if (!canvas) return;
                 
-                // CRIA APENAS 1 PARTÍCULA POR CLIQUE (Conforme V3.03)
-                const floorY = canvas.height - (Math.random() * (canvas.height * 0.1));
-                const newParticle = { 
-                    x: canvas.width / 2, 
-                    y: canvas.height * 0.4, 
-                    vx: (Math.random() - 0.5) * 25, 
-                    vy: (Math.random() - 0.5) * 25, 
-                    gravity: 0.5, 
-                    friction: 0.99, 
-                    elasticity: 0.8, 
-                    emoji: EASTER_EGG_EMOJIS[Math.floor(Math.random() * EASTER_EGG_EMOJIS.length)], 
-                    size: 30 + Math.random() * 20, 
-                    floorY: floorY, 
-                    life: 1.0, 
-                    settled: false 
-                };
-                
-                particlesRef.current = [...particlesRef.current, newParticle];
-            }, [trigger]);
+                const newParticles = [];
+                const count = quantity; 
+                for (let i = 0; i < count; i++) {
+                    const floorY = canvas.height - (Math.random() * (canvas.height * 0.1));
+                    newParticles.push({ x: canvas.width / 2, y: canvas.height * 0.4, vx: (Math.random() - 0.5) * 25, vy: (Math.random() - 0.5) * 25, gravity: 0.5, friction: 0.99, elasticity: 0.8, emoji: EASTER_EGG_EMOJIS[Math.floor(Math.random() * EASTER_EGG_EMOJIS.length)], size: 30 + Math.random() * 20, floorY: floorY, life: 1.0, settled: false });
+                }
+                particlesRef.current = [...particlesRef.current, ...newParticles];
+            }, [trigger, quantity]);
 
             React.useEffect(() => {
                 const canvas = canvasRef.current;
@@ -304,42 +293,62 @@
         };
 
         // --- FUNDO (OCEAN) ---
-        const OceanBackground = ({ active }) => {
+        const OceanBackground = ({ active, partyMode }) => {
             const canvasRef = React.useRef(null);
             React.useEffect(() => {
                 if (!active) return;
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext("2d");
-                const skyHeightRatio = 0.60; const seaTopHeightRatio = 0.16; const skyColor = "#FFE6F2";
+                const skyHeightRatio = 0.60; const seaTopHeightRatio = 0.16; 
+                
                 const seaLayers = [ { name: "Mar 2", color: "#A0C4FF", startYRatio: skyHeightRatio, endYRatio: 1.0, wave: { amplitude: 5, wavelength: 90, speed: 0.3 } }, { name: "Mar 1", color: "#80A8FF", startYRatio: skyHeightRatio + seaTopHeightRatio, endYRatio: 1.0, wave: { amplitude: 8, wavelength: 120, speed: 0.2 } } ];
                 let surfers = []; const SURFER_EMOJIS = ['🏄‍♂️', '🏄‍♀️'];
                 let fish = []; const FISH_EMOJIS = ['🐟', '🐠', '🐡'];
-                const createSurfer = () => { const startSide = Math.random() > 0.5 ? 'LEFT' : 'RIGHT'; const horizonY = canvas.height * skyHeightRatio; const minY = horizonY + 50; const maxY = canvas.height - 50; const spawnY = minY + Math.random() * (maxY - minY); return { x: startSide === 'LEFT' ? -150 : canvas.width + 150, y: spawnY, speedX: (startSide === 'LEFT' ? 1 : -1) * (0.4 + Math.random() * 0.4), verticalDir: Math.random() > 0.5 ? 1 : -1, verticalSpeedFactor: 0.3 + Math.random() * 0.3, zigzagTimer: 0, zigzagInterval: 150 + Math.floor(Math.random() * 150), sprite: SURFER_EMOJIS[Math.floor(Math.random() * SURFER_EMOJIS.length)], sizeScale: 0.7 + Math.random() * 0.6, active: true, trail: [] }; };
-                const createFish = () => { const horizonY = canvas.height * skyHeightRatio; const seaBottomY = canvas.height; const spawnX = Math.random() * canvas.width; const spawnY = horizonY + 50 + Math.random() * (seaBottomY - horizonY - 50); return { x: spawnX, y: spawnY, speedY: 0.5, sprite: FISH_EMOJIS[Math.floor(Math.random() * FISH_EMOJIS.length)], sizeScale: 0.5 + Math.random() * 0.3, active: true, life: 120, maxLife: 120 }; };
+                
+                const createSurfer = () => {
+                    const startSide = Math.random() > 0.5 ? 'LEFT' : 'RIGHT'; const horizonY = canvas.height * skyHeightRatio; const minY = horizonY + 50; const maxY = canvas.height - 50; const spawnY = minY + Math.random() * (maxY - minY);
+                    return { x: startSide === 'LEFT' ? -150 : canvas.width + 150, y: spawnY, speedX: (startSide === 'LEFT' ? 1 : -1) * (0.4 + Math.random() * 0.4), verticalDir: Math.random() > 0.5 ? 1 : -1, verticalSpeedFactor: 0.3 + Math.random() * 0.3, zigzagTimer: 0, zigzagInterval: 150 + Math.floor(Math.random() * 150), sprite: SURFER_EMOJIS[Math.floor(Math.random() * SURFER_EMOJIS.length)], sizeScale: 0.7 + Math.random() * 0.6, active: true, trail: [] };
+                };
+
+                const createFish = () => {
+                    const horizonY = canvas.height * skyHeightRatio;
+                    const spawnX = Math.random() * canvas.width;
+                    const spawnY = horizonY + 10;
+                    return { x: spawnX, y: spawnY, vx: (Math.random() - 0.5) * 2, vy: - (3 + Math.random() * 3), gravity: 0.15, sprite: FISH_EMOJIS[Math.floor(Math.random() * FISH_EMOJIS.length)], sizeScale: 0.5 + Math.random() * 0.3, active: true };
+                };
+
                 const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
                 window.addEventListener("resize", resize); resize();
                 let animationFrameId; let time = 0;
                 const loop = () => {
-                    time += 0.01; ctx.clearRect(0, 0, canvas.width, canvas.height); const h = canvas.height; const horizonY = h * skyHeightRatio; const seaBottomY = h;
-                    ctx.fillStyle = skyColor; ctx.fillRect(0, 0, canvas.width, horizonY + 20);
+                    time += 0.01; ctx.clearRect(0, 0, canvas.width, canvas.height); const h = canvas.height; const horizonY = h * skyHeightRatio; 
+                    
+                    // CÉU COM EFEITO PARTY MODE (RGB)
+                    if (partyMode) {
+                        const hue = (time * 200) % 360;
+                        ctx.fillStyle = `hsl(${hue}, 70%, 85%)`;
+                    } else {
+                        ctx.fillStyle = "#FFE6F2"; // Cor normal
+                    }
+                    ctx.fillRect(0, 0, canvas.width, horizonY + 20);
+
                     seaLayers.forEach(layer => { const startY = h * layer.startYRatio; const endY = h * layer.endYRatio; ctx.fillStyle = layer.color; ctx.beginPath(); ctx.moveTo(0, endY); for (let x = 0; x <= canvas.width; x += 10) { const waveY = startY + Math.sin(x / layer.wave.wavelength + time * layer.wave.speed) * layer.wave.amplitude; ctx.lineTo(x, waveY); } ctx.lineTo(canvas.width, endY); ctx.lineTo(0, endY); ctx.fill(); if(layer.endYRatio === 1.0) ctx.fillRect(0, endY - 1, canvas.width, h - endY + 1); });
+                    
                     if (surfers.length < 2 && Math.random() < 0.005) { surfers.push(createSurfer()); }
-                    surfers.forEach(f => { f.trail.push({x: f.x, y: f.y}); if (f.trail.length > 30) f.trail.shift(); f.x += f.speedX; f.zigzagTimer++; let nextY = f.y + (f.speedX * f.verticalDir * f.verticalSpeedFactor); if (f.verticalDir === -1 && nextY < horizonY + 40) { f.verticalDir = 1; f.zigzagTimer = 0; } else if (f.verticalDir === 1 && nextY > seaBottomY - 40) { f.verticalDir = -1; f.zigzagTimer = 0; } else if (f.zigzagTimer > f.zigzagInterval) { f.verticalDir *= -1; f.zigzagTimer = 0; } f.y += Math.abs(f.speedX) * f.verticalDir * f.verticalSpeedFactor; f.y += Math.sin(time * 2 + f.x * 0.01) * 0.5; if(f.x < -200 || f.x > canvas.width + 200) { f.active = false; } });
+                    surfers.forEach(f => { f.x += f.speedX; f.zigzagTimer++; let nextY = f.y + (f.speedX * f.verticalDir * f.verticalSpeedFactor); if (f.verticalDir === -1 && nextY < horizonY + 40) { f.verticalDir = 1; f.zigzagTimer = 0; } else if (f.verticalDir === 1 && nextY > h - 40) { f.verticalDir = -1; f.zigzagTimer = 0; } else if (f.zigzagTimer > f.zigzagInterval) { f.verticalDir *= -1; f.zigzagTimer = 0; } f.y += Math.abs(f.speedX) * f.verticalDir * f.verticalSpeedFactor; f.y += Math.sin(time * 2 + f.x * 0.01) * 0.5; if(f.x < -200 || f.x > canvas.width + 200) { f.active = false; } });
                     surfers = surfers.filter(f => f.active);
                     surfers.forEach(f => { ctx.font=`${Math.max(24,f.sizeScale*40)}px sans-serif`; ctx.shadowColor = "rgba(0,80,150,0.2)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 5; ctx.fillText(f.sprite,f.x,f.y); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; });
+
                     if (fish.length < 3 && Math.random() < 0.01) { fish.push(createFish()); }
-                    fish.forEach(f => { 
-                        // Lógica Pulo do Peixe (V3.02)
-                        f.vy += f.gravity; f.x += f.vx; f.y += f.vy; 
-                        if (f.y > horizonY + 50 && f.vy > 0) { f.active = false; }
-                    });
+                    fish.forEach(f => { f.vy += f.gravity; f.x += f.vx; f.y += f.vy; if (f.y > horizonY + 50 && f.vy > 0) { f.active = false; } });
                     fish = fish.filter(f => f.active);
                     fish.forEach(f => { ctx.font=`${Math.max(16,f.sizeScale*30)}px sans-serif`; ctx.fillText(f.sprite, f.x, f.y); });
+
                     animationFrameId = requestAnimationFrame(loop);
                 };
                 animationFrameId = requestAnimationFrame(loop);
                 return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(animationFrameId); };
-            }, [active]);
+            }, [active, partyMode]);
             if (!active) return null;
             return <canvas ref={canvasRef} style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', zIndex:-1}} />;
         };
@@ -372,8 +381,48 @@
             const [showChangelog, setShowChangelog] = React.useState(false);
             const [resultMessage, setResultMessage] = React.useState("");
             
-            const [easterEggTrigger, setEasterEggTrigger] = React.useState(0);
-            const handleEasterEggClick = () => { if (window.innerWidth < 768 && window.innerHeight > window.innerWidth) { setEasterEggTrigger(prev => prev + 1); } };
+            // EASTER EGG STATE
+            const [easterEggTrigger, setEasterEggTrigger] = React.useState(0); // Trigger para FoodRain
+            const [rainQuantity, setRainQuantity] = React.useState(1); // Quantidade de itens
+            const [partyMode, setPartyMode] = React.useState(false); // Party Mode do Céu
+            const [keys, setKeys] = React.useState([]); // Buffer do teclado
+
+            // EASTER EGG 1 (Mobile Click)
+            const handleEasterEggClick = () => { 
+                if (window.innerWidth < 768 && window.innerHeight > window.innerWidth) { 
+                    setRainQuantity(1); // Cai 1 por vez
+                    setEasterEggTrigger(prev => prev + 1); 
+                } 
+            };
+
+            // EASTER EGG 2 (KONAMI CODE - DESKTOP)
+            React.useEffect(() => {
+                const handleKeyDown = (event) => {
+                    setKeys(prev => {
+                        const newKeys = [...prev, event.key].slice(-8); // Guarda as últimas 8 teclas
+                        const sequence = newKeys.join('');
+                        // Sequencia: ArrowUpArrowUppokeArrowUpArrowUp
+                        if (sequence === 'ArrowUpArrowUppokeArrowUpArrowUp') {
+                            activatePartyMode();
+                        }
+                        return newKeys;
+                    });
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, []);
+
+            const activatePartyMode = () => {
+                setPartyMode(true);
+                setRainQuantity(50); // Cai 50 itens
+                setEasterEggTrigger(prev => prev + 1);
+                confetti({ particleCount: 200, spread: 150, origin: { y: 0.6 }, colors: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'] });
+                
+                // Reseta após 3 segundos
+                setTimeout(() => {
+                    setPartyMode(false);
+                }, 3000);
+            };
 
             const getCurrentPhases = () => {
                 if (selectedRecipe?.category === "SMOOTHIE") return PHASES_SMOOTHIE;
@@ -521,8 +570,17 @@
 
             return (
                 <div className="fixed inset-0 w-full h-full font-sans text-slate-800 flex flex-col md:flex-row overflow-hidden">
-                    <OceanBackground active={gameState !== "PLAYING"} />
-                    <FoodRain active={true} trigger={easterEggTrigger} />
+                    <OceanBackground active={gameState !== "PLAYING"} partyMode={partyMode} />
+                    <FoodRain active={true} trigger={easterEggTrigger} quantity={rainQuantity} />
+                    
+                    {/* OVERLAY DE PARTY MODE */}
+                    {partyMode && (
+                        <div className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none">
+                            <h1 className="text-6xl md:text-8xl font-black text-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)] animate-pulse-fast text-center">
+                                LIVE PINK! 🤙
+                            </h1>
+                        </div>
+                    )}
                     
                     {/* MENU LATERAL */}
                     <div className={`p-4 md:w-1/4 flex flex-col gap-2 transition-all duration-500 z-10 bg-pastel-blue-100/80 backdrop-blur-md border-r border-pastel-blue-200/40 shadow-lg ${gameState === "HOME" ? "w-full h-full overflow-y-auto" : "hidden md:flex h-full overflow-y-auto"}`}>
@@ -593,7 +651,7 @@
                     </div>
                     
                     <div className="fixed bottom-1 right-2 z-50">
-                        <button onClick={() => setShowChangelog(true)} className="text-xs text-slate-500/60 font-sans hover:text-pastel-blue-500 hover:underline transition-colors select-none">v3.03 BETA</button>
+                        <button onClick={() => setShowChangelog(true)} className="text-xs text-slate-500/60 font-sans hover:text-pastel-blue-500 hover:underline transition-colors select-none">v3.04 BETA</button>
                     </div>
                     
                     {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
