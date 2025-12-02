@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poke House – Treino v2.11 BETA</title>
+    <title>Poke House – Treino v2.12 BETA</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -98,7 +98,8 @@
 
         // --- HISTÓRICO DE VERSÕES ---
         const CHANGELOG = [
-            { version: "2.11", date: "Atual", changes: ["Aumento do tamanho do logo na versão mobile."] },
+            { version: "2.12", date: "Atual", changes: ["Inserção do 1° easter egg."] },
+            { version: "2.11", date: "Anterior", changes: ["Aumento do tamanho do logo na versão mobile."] },
             { version: "2.10", date: "Anterior", changes: ["Adição da 'bowl pulante' 🥗 na tela inicial do modo mobile."] },
             { version: "2.09", date: "Anterior", changes: ["Novas mensagens aleatórias de feedback (Sucesso e Erro)."] },
             { version: "2.08", date: "Anterior", changes: ["Atualização de UX: Mar e surfistas. Inserção de peixes.", "Correção do fundo rosa aparecendo no mar.", "Peixes aparecem por 2s e sobem sumindo."] },
@@ -107,9 +108,7 @@
             { version: "2.04", date: "Anterior", changes: ["Lógica do timer ajustada (emojis de tensão)", "Timer fica vermelho nos últimos 6 segundos."] },
             { version: "2.03", date: "Anterior", changes: ["Atualização receitas Smoothies (Modo E 2x)", "Inclusão Banana no 'Into the Sun'"] },
             { version: "2.01", date: "Anterior", changes: ["Criação da categoria SMOOTHIES", "Lógica separada para Bowls vs Smoothies", "Novos ingredientes e fases específicas"] },
-            { version: "1.18", date: "Anterior", changes: ["Remoção do sistema de Pontuação e Nome", "Simplificação da tela de sucesso"] },
-            { version: "1.16", date: "Anterior", changes: ["Ajuste no movimento dos surfistas (Zigzag lento)", "Correção de colisão com o horizonte"] },
-            { version: "1.15", date: "Anterior", changes: ["Ajuste nas proporções do cenário (Céu 60%, Mar 40%)", "Limpeza de ingredientes duplicados"] }
+            { version: "1.18", date: "Anterior", changes: ["Remoção do sistema de Pontuação e Nome", "Simplificação da tela de sucesso"] }
         ];
 
         // --- DADOS DO JOGO ---
@@ -189,62 +188,171 @@
             return array;
         }
 
-        // --- FUNDO ---
+        // --- EASTER EGG (FOOD RAIN) ---
+        const EASTER_EGG_EMOJIS = ['🥑','🍅','🫛','🥕','🫒','🌽','🧅','🥦','🍓','🥭','🍍','🍣','🍤','🍪','🥗','🧀','🥚','🥔'];
+        
+        const FoodRain = ({ active, trigger }) => {
+            const canvasRef = React.useRef(null);
+            const [particles, setParticles] = React.useState([]);
+
+            // Adiciona novas partículas quando o trigger muda
+            React.useEffect(() => {
+                if (!trigger || trigger === 0) return;
+                
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                
+                const newParticles = [];
+                // Cria 8-12 comidas por clique
+                const count = 8 + Math.floor(Math.random() * 5); 
+                
+                for (let i = 0; i < count; i++) {
+                    // Chão aleatório nos últimos 10% da tela
+                    const floorY = canvas.height - (Math.random() * (canvas.height * 0.1));
+                    
+                    newParticles.push({
+                        x: canvas.width / 2, // Nasce no centro (onde está a bowl)
+                        y: canvas.height * 0.4, // Altura aproximada da bowl no mobile
+                        vx: (Math.random() - 0.5) * 25, // Velocidade horizontal frenética
+                        vy: (Math.random() - 0.5) * 25, // Velocidade vertical frenética
+                        gravity: 0.5,
+                        friction: 0.99, // Ar
+                        elasticity: 0.8, // Quica muito
+                        emoji: EASTER_EGG_EMOJIS[Math.floor(Math.random() * EASTER_EGG_EMOJIS.length)],
+                        size: 30 + Math.random() * 20,
+                        floorY: floorY,
+                        life: 1.0, // Opacidade
+                        settled: false
+                    });
+                }
+                
+                setParticles(prev => [...prev, ...newParticles]);
+            }, [trigger]);
+
+            // Loop de animação
+            React.useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext("2d");
+                
+                const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+                window.addEventListener("resize", resize); resize();
+
+                let animationId;
+
+                const loop = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Atualiza e desenha partículas
+                    // Usamos uma referência mutável para o estado dentro do loop seria complexo com React puro, 
+                    // então vamos usar uma abordagem simplificada onde manipulamos o array localmente e atualizamos o estado menos frequentemente ou usamos ref.
+                    // Para simplificar neste código único, vamos usar um truque: 
+                    // O loop roda baseado no estado 'particles'. Mas 'particles' é const no closure.
+                    // Precisamos de um ref para as particulas para animar performaticamente.
+                };
+                
+                // Hack para animar com React state em canvas sem lag:
+                // Na verdade, para um easter egg rápido, vamos fazer a lógica dentro do requestAnimationFrame
+                // usando uma ref para guardar as partículas vivas.
+                
+                return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(animationId); };
+            }, []);
+            
+            // Re-implementação correta com Ref para performance
+            const particlesRef = React.useRef([]);
+            
+            // Sincroniza o ref com o estado quando adicionamos (apenas para adicionar)
+            React.useEffect(() => {
+                if (particles.length > 0) {
+                    particlesRef.current = [...particlesRef.current, ...particles];
+                    setParticles([]); // Limpa o estado para não re-adicionar
+                }
+            }, [particles]);
+
+            React.useEffect(() => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext("2d");
+                let animId;
+
+                const render = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Filtra partículas mortas (life <= 0)
+                    particlesRef.current = particlesRef.current.filter(p => p.life > 0);
+
+                    particlesRef.current.forEach(p => {
+                        if (!p.settled) {
+                            p.vy += p.gravity;
+                            p.x += p.vx;
+                            p.y += p.vy;
+
+                            // Colisão Paredes
+                            if (p.x < 0 || p.x > canvas.width) {
+                                p.vx *= -1;
+                                p.x = p.x < 0 ? 0 : canvas.width;
+                            }
+
+                            // Colisão Chão (Acumular)
+                            if (p.y > p.floorY) {
+                                p.y = p.floorY;
+                                p.vy *= -p.elasticity;
+                                p.vx *= 0.9; // Atrito no chão
+                                
+                                // Se a velocidade for muito baixa, para
+                                if (Math.abs(p.vy) < 1 && Math.abs(p.vx) < 1) {
+                                    p.settled = true;
+                                }
+                            }
+                        } else {
+                            // Se está parado, começa a sumir
+                            p.life -= 0.01;
+                        }
+
+                        ctx.globalAlpha = p.life;
+                        ctx.font = `${p.size}px sans-serif`;
+                        ctx.fillText(p.emoji, p.x, p.y);
+                        ctx.globalAlpha = 1.0;
+                    });
+
+                    animId = requestAnimationFrame(render);
+                };
+                render();
+                return () => cancelAnimationFrame(animId);
+            }, []);
+
+            return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-50" />;
+        };
+
+
+        // --- FUNDO (OCEAN) ---
         const OceanBackground = ({ active }) => {
             const canvasRef = React.useRef(null);
             React.useEffect(() => {
                 if (!active) return;
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext("2d");
-                
-                const skyHeightRatio = 0.60; 
-                const seaTopHeightRatio = 0.16; 
-                const skyColor = "#FFE6F2";
-
-                const seaLayers = [
-                    { name: "Mar 2 (Topo - Background)", color: "#A0C4FF", startYRatio: skyHeightRatio, endYRatio: 1.0, wave: { amplitude: 5, wavelength: 90, speed: 0.3 } },
-                    { name: "Mar 1 (Fundo - Foreground)", color: "#80A8FF", startYRatio: skyHeightRatio + seaTopHeightRatio, endYRatio: 1.0, wave: { amplitude: 8, wavelength: 120, speed: 0.2 } }
-                ];
-                
+                const skyHeightRatio = 0.60; const seaTopHeightRatio = 0.16; const skyColor = "#FFE6F2";
+                const seaLayers = [ { name: "Mar 2", color: "#A0C4FF", startYRatio: skyHeightRatio, endYRatio: 1.0, wave: { amplitude: 5, wavelength: 90, speed: 0.3 } }, { name: "Mar 1", color: "#80A8FF", startYRatio: skyHeightRatio + seaTopHeightRatio, endYRatio: 1.0, wave: { amplitude: 8, wavelength: 120, speed: 0.2 } } ];
                 let surfers = []; const SURFER_EMOJIS = ['🏄‍♂️', '🏄‍♀️'];
                 let fish = []; const FISH_EMOJIS = ['🐟', '🐠', '🐡'];
-
-                const createSurfer = () => {
-                    const startSide = Math.random() > 0.5 ? 'LEFT' : 'RIGHT'; const horizonY = canvas.height * skyHeightRatio; const minY = horizonY + 50; const maxY = canvas.height - 50; const spawnY = minY + Math.random() * (maxY - minY);
-                    return { x: startSide === 'LEFT' ? -150 : canvas.width + 150, y: spawnY, speedX: (startSide === 'LEFT' ? 1 : -1) * (0.4 + Math.random() * 0.4), verticalDir: Math.random() > 0.5 ? 1 : -1, verticalSpeedFactor: 0.3 + Math.random() * 0.3, zigzagTimer: 0, zigzagInterval: 150 + Math.floor(Math.random() * 150), sprite: SURFER_EMOJIS[Math.floor(Math.random() * SURFER_EMOJIS.length)], sizeScale: 0.7 + Math.random() * 0.6, active: true, trail: [] };
-                };
-
-                const createFish = () => {
-                    const horizonY = canvas.height * skyHeightRatio;
-                    const seaBottomY = canvas.height;
-                    const spawnX = Math.random() * canvas.width;
-                    const spawnY = horizonY + 50 + Math.random() * (seaBottomY - horizonY - 50);
-                    return { x: spawnX, y: spawnY, speedY: 0.5, sprite: FISH_EMOJIS[Math.floor(Math.random() * FISH_EMOJIS.length)], sizeScale: 0.5 + Math.random() * 0.3, active: true, life: 120, maxLife: 120 };
-                };
-
+                const createSurfer = () => { const startSide = Math.random() > 0.5 ? 'LEFT' : 'RIGHT'; const horizonY = canvas.height * skyHeightRatio; const minY = horizonY + 50; const maxY = canvas.height - 50; const spawnY = minY + Math.random() * (maxY - minY); return { x: startSide === 'LEFT' ? -150 : canvas.width + 150, y: spawnY, speedX: (startSide === 'LEFT' ? 1 : -1) * (0.4 + Math.random() * 0.4), verticalDir: Math.random() > 0.5 ? 1 : -1, verticalSpeedFactor: 0.3 + Math.random() * 0.3, zigzagTimer: 0, zigzagInterval: 150 + Math.floor(Math.random() * 150), sprite: SURFER_EMOJIS[Math.floor(Math.random() * SURFER_EMOJIS.length)], sizeScale: 0.7 + Math.random() * 0.6, active: true, trail: [] }; };
+                const createFish = () => { const horizonY = canvas.height * skyHeightRatio; const seaBottomY = canvas.height; const spawnX = Math.random() * canvas.width; const spawnY = horizonY + 50 + Math.random() * (seaBottomY - horizonY - 50); return { x: spawnX, y: spawnY, speedY: 0.5, sprite: FISH_EMOJIS[Math.floor(Math.random() * FISH_EMOJIS.length)], sizeScale: 0.5 + Math.random() * 0.3, active: true, life: 120, maxLife: 120 }; };
                 const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
                 window.addEventListener("resize", resize); resize();
                 let animationFrameId; let time = 0;
                 const loop = () => {
                     time += 0.01; ctx.clearRect(0, 0, canvas.width, canvas.height); const h = canvas.height; const horizonY = h * skyHeightRatio; const seaBottomY = h;
-                    
                     ctx.fillStyle = skyColor; ctx.fillRect(0, 0, canvas.width, horizonY + 20);
-
-                    seaLayers.forEach(layer => {
-                        const startY = h * layer.startYRatio; const endY = h * layer.endYRatio;
-                        ctx.fillStyle = layer.color; ctx.beginPath(); ctx.moveTo(0, endY);
-                        for (let x = 0; x <= canvas.width; x += 10) { const waveY = startY + Math.sin(x / layer.wave.wavelength + time * layer.wave.speed) * layer.wave.amplitude; ctx.lineTo(x, waveY); }
-                        ctx.lineTo(canvas.width, endY); ctx.lineTo(0, endY); ctx.fill(); if(layer.endYRatio === 1.0) ctx.fillRect(0, endY - 1, canvas.width, h - endY + 1);
-                    });
-                    
+                    seaLayers.forEach(layer => { const startY = h * layer.startYRatio; const endY = h * layer.endYRatio; ctx.fillStyle = layer.color; ctx.beginPath(); ctx.moveTo(0, endY); for (let x = 0; x <= canvas.width; x += 10) { const waveY = startY + Math.sin(x / layer.wave.wavelength + time * layer.wave.speed) * layer.wave.amplitude; ctx.lineTo(x, waveY); } ctx.lineTo(canvas.width, endY); ctx.lineTo(0, endY); ctx.fill(); if(layer.endYRatio === 1.0) ctx.fillRect(0, endY - 1, canvas.width, h - endY + 1); });
                     if (surfers.length < 2 && Math.random() < 0.005) { surfers.push(createSurfer()); }
-                    surfers.forEach(f => updateSurfer(f, canvas.width, canvas.height, horizonY, seaBottomY, time));
-                    surfers = surfers.filter(f => f.active); surfers.forEach(f => drawSurferTrail(ctx, f)); surfers.forEach(f => drawSurferSprite(ctx, f));
-
+                    surfers.forEach(f => { f.trail.push({x: f.x, y: f.y}); if (f.trail.length > 30) f.trail.shift(); f.x += f.speedX; f.zigzagTimer++; let nextY = f.y + (f.speedX * f.verticalDir * f.verticalSpeedFactor); if (f.verticalDir === -1 && nextY < horizonY + 40) { f.verticalDir = 1; f.zigzagTimer = 0; } else if (f.verticalDir === 1 && nextY > seaBottomY - 40) { f.verticalDir = -1; f.zigzagTimer = 0; } else if (f.zigzagTimer > f.zigzagInterval) { f.verticalDir *= -1; f.zigzagTimer = 0; } f.y += Math.abs(f.speedX) * f.verticalDir * f.verticalSpeedFactor; f.y += Math.sin(time * 2 + f.x * 0.01) * 0.5; if(f.x < -200 || f.x > canvas.width + 200) { f.active = false; } });
+                    surfers = surfers.filter(f => f.active);
+                    surfers.forEach(f => { const trailSize = 25 * f.sizeScale; f.trail.forEach((point, index) => { const opacity = (index / f.trail.length) * 0.5; ctx.fillStyle = `rgba(220, 245, 255, ${opacity})`; ctx.fillRect(point.x + 10, point.y + 20, trailSize, trailSize * 0.6); }); });
+                    surfers.forEach(f => { ctx.font=`${Math.max(24,f.sizeScale*40)}px sans-serif`; ctx.shadowColor = "rgba(0,80,150,0.2)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 5; ctx.fillText(f.sprite,f.x,f.y); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; });
                     if (fish.length < 3 && Math.random() < 0.01) { fish.push(createFish()); }
-                    fish.forEach(f => updateFish(f));
-                    fish = fish.filter(f => f.active); fish.forEach(f => drawFishSprite(ctx, f));
-
+                    fish.forEach(f => { f.y -= 0.3; f.life--; if (f.life <= 0) f.active = false; });
+                    fish = fish.filter(f => f.active);
+                    fish.forEach(f => { const opacity = f.life / f.maxLife; ctx.globalAlpha = opacity; ctx.font=`${Math.max(16,f.sizeScale*30)}px sans-serif`; ctx.fillText(f.sprite, f.x, f.y); ctx.globalAlpha = 1.0; });
                     animationFrameId = requestAnimationFrame(loop);
                 };
                 animationFrameId = requestAnimationFrame(loop);
@@ -253,61 +361,15 @@
             if (!active) return null;
             return <canvas ref={canvasRef} style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', zIndex:-1}} />;
         };
-        
-        function updateSurfer(f, w, h, horizonY, seaBottomY, t){ 
-            f.trail.push({x: f.x, y: f.y}); if (f.trail.length > 30) f.trail.shift();
-            f.x += f.speedX; f.zigzagTimer++;
-            let nextY = f.y + (f.speedX * f.verticalDir * f.verticalSpeedFactor);
-            if (f.verticalDir === -1 && nextY < horizonY + 40) { f.verticalDir = 1; f.zigzagTimer = 0; } else if (f.verticalDir === 1 && nextY > seaBottomY - 40) { f.verticalDir = -1; f.zigzagTimer = 0; } else if (f.zigzagTimer > f.zigzagInterval) { f.verticalDir *= -1; f.zigzagTimer = 0; }
-            f.y += Math.abs(f.speedX) * f.verticalDir * f.verticalSpeedFactor; f.y += Math.sin(t * 2 + f.x * 0.01) * 0.5;
-            if(f.x < -200 || f.x > w + 200) { f.active = false; }
-        }
-
-        function updateFish(f) {
-            f.y -= 0.3; f.life--; 
-            if (f.life <= 0) f.active = false;
-        }
-
-        function drawSurferTrail(ctx, f) { const trailSize = 25 * f.sizeScale; f.trail.forEach((point, index) => { const opacity = (index / f.trail.length) * 0.5; ctx.fillStyle = `rgba(220, 245, 255, ${opacity})`; ctx.fillRect(point.x + 10, point.y + 20, trailSize, trailSize * 0.6); }); }
-        function drawSurferSprite(ctx, f){ ctx.font=`${Math.max(24,f.sizeScale*40)}px sans-serif`; ctx.shadowColor = "rgba(0,80,150,0.2)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 5; ctx.fillText(f.sprite,f.x,f.y); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; }
-        function drawFishSprite(ctx, f) {
-            const opacity = f.life / f.maxLife; 
-            ctx.globalAlpha = opacity;
-            ctx.font=`${Math.max(16,f.sizeScale*30)}px sans-serif`; 
-            ctx.fillText(f.sprite, f.x, f.y);
-            ctx.globalAlpha = 1.0;
-        }
 
         // --- COMPONENTE MODAL DE CHANGELOG ---
         const ChangelogModal = ({ onClose }) => (
             <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                 <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl relative">
-                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                    <h3 className="font-bold text-2xl mb-6 text-pastel-blue-500 flex items-center gap-2">
-                        <IconList /> Histórico de Versões
-                    </h3>
-                    <div className="space-y-6">
-                        {CHANGELOG.map((item, index) => (
-                            <div key={index} className="border-l-4 border-pastel-blue-200 pl-4">
-                                <div className="flex justify-between items-baseline mb-1">
-                                    <span className="font-bold text-lg text-slate-700">v{item.version}</span>
-                                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{item.date}</span>
-                                </div>
-                                <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
-                                    {item.changes.map((change, i) => (
-                                        <li key={i}>{change}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="mt-8 pt-4 border-t border-slate-100 text-center">
-                        <button onClick={onClose} className="bg-slate-100 text-slate-600 px-6 py-2 rounded-full font-bold text-sm hover:bg-slate-200 transition-colors">
-                            Fechar
-                        </button>
-                    </div>
+                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                    <h3 className="font-bold text-2xl mb-6 text-pastel-blue-500 flex items-center gap-2"><IconList /> Histórico de Versões</h3>
+                    <div className="space-y-6">{CHANGELOG.map((item, index) => (<div key={index} className="border-l-4 border-pastel-blue-200 pl-4"><div className="flex justify-between items-baseline mb-1"><span className="font-bold text-lg text-slate-700">v{item.version}</span><span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{item.date}</span></div><ul className="list-disc list-inside text-sm text-slate-600 space-y-1">{item.changes.map((change, i) => (<li key={i}>{change}</li>))}</ul></div>))}</div>
+                    <div className="mt-8 pt-4 border-t border-slate-100 text-center"><button onClick={onClose} className="bg-slate-100 text-slate-600 px-6 py-2 rounded-full font-bold text-sm hover:bg-slate-200 transition-colors">Fechar</button></div>
                 </div>
             </div>
         );
@@ -326,6 +388,16 @@
             const [errorDetails, setErrorDetails] = React.useState([]);
             const [showChangelog, setShowChangelog] = React.useState(false);
             const [resultMessage, setResultMessage] = React.useState("");
+            
+            // EASTER EGG STATE
+            const [easterEggTrigger, setEasterEggTrigger] = React.useState(0);
+
+            const handleEasterEggClick = () => {
+                // Só ativa se for mobile (telas pequenas) e estiver na vertical (altura > largura)
+                if (window.innerWidth < 768 && window.innerHeight > window.innerWidth) {
+                    setEasterEggTrigger(prev => prev + 1);
+                }
+            };
 
             const getCurrentPhases = () => {
                 if (selectedRecipe?.category === "SMOOTHIE") return PHASES_SMOOTHIE;
@@ -334,12 +406,7 @@
             
             React.useEffect(() => {
                 if (gameState !== "PLAYING") return;
-                if (timer > 16) setTimerEmoji("😃");
-                else if (timer > 12) setTimerEmoji("🙂");
-                else if (timer > 8) setTimerEmoji("😐");
-                else if (timer > 4) setTimerEmoji("😦");
-                else setTimerEmoji("😱");
-
+                if (timer > 16) setTimerEmoji("😃"); else if (timer > 12) setTimerEmoji("🙂"); else if (timer > 8) setTimerEmoji("😐"); else if (timer > 4) setTimerEmoji("😦"); else setTimerEmoji("😱");
                 if (timer === 0) { handleGameOver(false, ["Tempo esgotado!"]); return; }
                 const interval = setInterval(() => setTimer(t => t - 1), 1000);
                 return () => clearInterval(interval);
@@ -375,13 +442,10 @@
                 const activePhases = getCurrentPhases();
                 const phase = activePhases[currentPhaseIndex];
                 const requiredList = selectedRecipe[phase.key];
-                
                 const isCorrect = requiredList.includes(ingredient);
                 playSound(isCorrect ? "happy" : "sad");
-
                 const newSelections = [...currentSelections, ingredient];
                 setCurrentSelections(newSelections);
-
                 if (newSelections.length === selectedRecipe[phase.key].length) {
                     const updatedAll = { ...allSelections, [phase.key]: newSelections };
                     setAllSelections(updatedAll);
@@ -403,46 +467,21 @@
                     const selected = [...finalSelections[phase.key]].sort();
                     if (JSON.stringify(required) !== JSON.stringify(selected)) errors.push(`Erro em ${phase.title.replace(":", "")}. Era: ${required.join(", ")}`);
                 });
-                
-                if (errors.length === 0 && window.gtag) {
-                    window.gtag('event', 'bowl_concluida', {
-                        'recipe_name': selectedRecipe.name,
-                        'category': selectedRecipe.category
-                    });
-                }
-
+                if (errors.length === 0 && window.gtag) { window.gtag('event', 'bowl_concluida', { 'recipe_name': selectedRecipe.name, 'category': selectedRecipe.category }); }
                 handleGameOver(errors.length === 0, errors);
             };
 
             const handleGameOver = (success, errors) => {
                 if (success) {
-                    setGameState("RESULT_SUCCESS");
-                    playSound("happy");
-                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                    setResultMessage(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)]);
+                    setGameState("RESULT_SUCCESS"); playSound("happy"); confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); setResultMessage(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)]);
                 } else {
-                    setErrorDetails(errors);
-                    setGameState("RESULT_FAIL");
-                    playSound("sad");
-                    setResultMessage(FAIL_MESSAGES[Math.floor(Math.random() * FAIL_MESSAGES.length)]);
+                    setErrorDetails(errors); setGameState("RESULT_FAIL"); playSound("sad"); setResultMessage(FAIL_MESSAGES[Math.floor(Math.random() * FAIL_MESSAGES.length)]);
                 }
             };
 
             const getFullIngredientList = (key) => {
                  switch(key) {
-                    case 'base': return INGREDIENTS_DB.bases;
-                    case 'sauce_base': return INGREDIENTS_DB.sauces_base;
-                    case 'greens': return INGREDIENTS_DB.greens;
-                    case 'protein': return INGREDIENTS_DB.proteins;
-                    case 'sauce_final': return INGREDIENTS_DB.sauces_final;
-                    case 'crispy': return INGREDIENTS_DB.crispies;
-                    case 'sesame': return INGREDIENTS_DB.sesame;
-                    case 'smoothie_liquid': return INGREDIENTS_DB.smoothie_liquid;
-                    case 'smoothie_amount': return INGREDIENTS_DB.smoothie_amount;
-                    case 'smoothie_ingredients': return INGREDIENTS_DB.smoothie_ingredients;
-                    case 'smoothie_ice': return INGREDIENTS_DB.smoothie_ice;
-                    case 'smoothie_mode': return INGREDIENTS_DB.smoothie_mode;
-                    default: return [];
+                    case 'base': return INGREDIENTS_DB.bases; case 'sauce_base': return INGREDIENTS_DB.sauces_base; case 'greens': return INGREDIENTS_DB.greens; case 'protein': return INGREDIENTS_DB.proteins; case 'sauce_final': return INGREDIENTS_DB.sauces_final; case 'crispy': return INGREDIENTS_DB.crispies; case 'sesame': return INGREDIENTS_DB.sesame; case 'smoothie_liquid': return INGREDIENTS_DB.smoothie_liquid; case 'smoothie_amount': return INGREDIENTS_DB.smoothie_amount; case 'smoothie_ingredients': return INGREDIENTS_DB.smoothie_ingredients; case 'smoothie_ice': return INGREDIENTS_DB.smoothie_ice; case 'smoothie_mode': return INGREDIENTS_DB.smoothie_mode; default: return [];
                 }
             };
 
@@ -451,39 +490,37 @@
             return (
                 <div className="fixed inset-0 w-full h-full font-sans text-slate-800 flex flex-col md:flex-row overflow-hidden">
                     <OceanBackground active={gameState !== "PLAYING"} />
+                    <FoodRain active={true} trigger={easterEggTrigger} />
                     
                     {/* MENU LATERAL */}
                     <div className={`p-4 md:w-1/4 flex flex-col gap-2 transition-all duration-500 z-10 bg-pastel-blue-100/80 backdrop-blur-md border-r border-pastel-blue-200/40 shadow-lg ${gameState === "HOME" ? "w-full h-full overflow-y-auto" : "hidden md:flex h-full overflow-y-auto"}`}>
                         <div className="mb-6 text-center md:text-left flex justify-center md:justify-start">
-                            {/* LOGO COM TAMANHO AUMENTADO NO MOBILE (w-4/5) */}
                             <img src="https://storage.googleapis.com/ikona-bucket-production/images/5db193be3ea71a0001bb09f7/EXTENDED%20VERSION_original%20colors-617ac363073e550017b9966b.png" alt="Poke House Logo" className="w-4/5 md:w-auto md:h-16 object-contain" />
                         </div>
                         
-                        {/* BOWL PULANTE NO MOBILE */}
+                        {/* BOWL PULANTE NO MOBILE - BOTÃO EASTER EGG */}
                         {gameState === "HOME" && menuCategory === null && (
-                            <div className="md:hidden text-6xl animate-bounce text-center mb-6">🥗</div>
+                            <div 
+                                onClick={handleEasterEggClick}
+                                className="md:hidden text-6xl animate-bounce text-center mb-6 cursor-pointer select-none active:scale-95 transition-transform"
+                                style={{ zIndex: 60 }} // Garante que fique acima do canvas de comida
+                            >
+                                🥗
+                            </div>
                         )}
 
                         {menuCategory === null ? (
                             <div className="flex flex-col gap-4 mt-4 md:mt-0 h-full justify-center md:justify-start">
-                                <button onClick={() => setMenuCategory("HOUSE")} className="bg-pastel-blue-400 text-white p-6 rounded-2xl shadow-lg hover:bg-pastel-blue-500 transition-all transform hover:scale-105 flex flex-col items-center">
-                                    <span className="text-4xl mb-2">🐟</span> <span className="text-xl font-bold">House Bowls</span>
-                                </button>
-                                <button onClick={() => setMenuCategory("GREEN")} className="bg-pastel-green text-slate-800 p-6 rounded-2xl shadow-lg hover:bg-green-300 transition-all transform hover:scale-105 flex flex-col items-center">
-                                    <span className="text-4xl mb-2">🥗</span> <span className="text-xl font-bold">Green Bowls</span>
-                                </button>
-                                 <button onClick={() => setMenuCategory("SMOOTHIE")} className="bg-pastel-yellow text-slate-800 p-6 rounded-2xl shadow-lg hover:bg-yellow-200 transition-all transform hover:scale-105 flex flex-col items-center">
-                                    <span className="text-4xl mb-2">🥤</span> <span className="text-xl font-bold">Smoothies</span>
-                                </button>
+                                <button onClick={() => setMenuCategory("HOUSE")} className="bg-pastel-blue-400 text-white p-6 rounded-2xl shadow-lg hover:bg-pastel-blue-500 transition-all transform hover:scale-105 flex flex-col items-center"><span className="text-4xl mb-2">🐟</span> <span className="text-xl font-bold">House Bowls</span></button>
+                                <button onClick={() => setMenuCategory("GREEN")} className="bg-pastel-green text-slate-800 p-6 rounded-2xl shadow-lg hover:bg-green-300 transition-all transform hover:scale-105 flex flex-col items-center"><span className="text-4xl mb-2">🥗</span> <span className="text-xl font-bold">Green Bowls</span></button>
+                                 <button onClick={() => setMenuCategory("SMOOTHIE")} className="bg-pastel-yellow text-slate-800 p-6 rounded-2xl shadow-lg hover:bg-yellow-200 transition-all transform hover:scale-105 flex flex-col items-center"><span className="text-4xl mb-2">🥤</span> <span className="text-xl font-bold">Smoothies</span></button>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-2 animate-fade-in">
                                 <button onClick={() => setMenuCategory(null)} className="mb-2 text-pastel-blue-500 font-bold flex items-center gap-2 hover:bg-pastel-blue-100/50 p-2 rounded-lg"><IconArrowLeft size={16} color="#404FC2"/> Voltar</button>
                                 <h3 className="font-bold text-pastel-blue-500 mb-2 uppercase tracking-wide">{menuCategory} {menuCategory === "SMOOTHIE" ? "" : "BOWLS"}</h3>
                                 {RECIPES.filter(r => r.category === menuCategory).map(recipe => (
-                                    <button key={recipe.id} onClick={() => startGame(recipe)} disabled={gameState === "PLAYING" && selectedRecipe?.id !== recipe.id} className={`p-3 rounded-xl shadow-sm text-left font-semibold transition-all ${selectedRecipe?.id === recipe.id ? "bg-pastel-blue-300 text-white scale-105" : "bg-pastel-blue-100/80 hover:bg-pastel-blue-200/80 text-slate-700"} ${gameState === "PLAYING" && selectedRecipe?.id !== recipe.id ? "opacity-50 hidden md:block" : ""}`}>
-                                        {recipe.name}
-                                    </button>
+                                    <button key={recipe.id} onClick={() => startGame(recipe)} disabled={gameState === "PLAYING" && selectedRecipe?.id !== recipe.id} className={`p-3 rounded-xl shadow-sm text-left font-semibold transition-all ${selectedRecipe?.id === recipe.id ? "bg-pastel-blue-300 text-white scale-105" : "bg-pastel-blue-100/80 hover:bg-pastel-blue-200/80 text-slate-700"} ${gameState === "PLAYING" && selectedRecipe?.id !== recipe.id ? "opacity-50 hidden md:block" : ""}`}>{recipe.name}</button>
                                 ))}
                             </div>
                         )}
@@ -491,70 +528,36 @@
 
                     {/* ÁREA DO JOGO */}
                     <div className={`flex-1 relative z-10 flex flex-col items-center justify-center p-2 md:p-6 ${gameState === "HOME" ? "hidden md:flex" : "flex h-full"}`}>
-                        
                         {gameState === "PLAYING" && (
                             <div className="w-full h-full md:h-auto md:max-h-[90vh] max-w-5xl bg-pastel-blue-100/85 backdrop-blur-md rounded-xl md:rounded-3xl shadow-xl border border-pastel-blue-200/50 animate-fade-in flex flex-col overflow-hidden">
-                                <div className="p-2 bg-pastel-blue-200/50 text-center text-pastel-blue-500 font-semibold text-sm md:text-base border-b border-pastel-blue-200/50 shrink-0">
-                                    Receita Atual: <span className="font-bold">{selectedRecipe.name}</span>
-                                </div>
+                                <div className="p-2 bg-pastel-blue-200/50 text-center text-pastel-blue-500 font-semibold text-sm md:text-base border-b border-pastel-blue-200/50 shrink-0">Receita Atual: <span className="font-bold">{selectedRecipe.name}</span></div>
                                 <div className="flex justify-between items-center p-4 border-b border-pastel-blue-200/50 bg-pastel-blue-100/40 shrink-0">
-                                    <div>
-                                        <h2 className="text-xl md:text-3xl font-bold text-pastel-blue-500">{getCurrentPhaseData().title}</h2>
-                                        <p className="text-xs md:text-base text-slate-600">
-                                            {selectedRecipe[getCurrentPhaseData().key].length > 1 
-                                                ? `Escolha ${selectedRecipe[getCurrentPhaseData().key].length} opções.` 
-                                                : getCurrentPhaseData().hint}
-                                        </p>
-                                        <div className="text-xs md:text-sm mt-1 font-bold text-pastel-blue-400">Selecionado: {currentSelections.length} / {selectedRecipe[getCurrentPhaseData().key].length}</div>
-                                    </div>
-                                    <div className="flex flex-col items-center min-w-[60px]">
-                                        <span className="text-3xl md:text-4xl">{timerEmoji}</span>
-                                        <span className={`text-xl md:text-2xl font-bold ${timer <= 6 ? 'text-red-500' : 'text-pastel-blue-500'}`}>{timer}s</span>
-                                    </div>
+                                    <div><h2 className="text-xl md:text-3xl font-bold text-pastel-blue-500">{getCurrentPhaseData().title}</h2><p className="text-xs md:text-base text-slate-600">{selectedRecipe[getCurrentPhaseData().key].length > 1 ? `Escolha ${selectedRecipe[getCurrentPhaseData().key].length} opções.` : getCurrentPhaseData().hint}</p><div className="text-xs md:text-sm mt-1 font-bold text-pastel-blue-400">Selecionado: {currentSelections.length} / {selectedRecipe[getCurrentPhaseData().key].length}</div></div>
+                                    <div className="flex flex-col items-center min-w-[60px]"><span className="text-3xl md:text-4xl">{timerEmoji}</span><span className={`text-xl md:text-2xl font-bold ${timer <= 6 ? 'text-red-500' : 'text-pastel-blue-500'}`}>{timer}s</span></div>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-2 md:p-6 custom-scroll min-h-0 flex items-center justify-center">
                                     <div className={`grid gap-2 md:gap-4 w-full ${phaseOptions.length > 6 ? 'grid-cols-3 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-3'}`}>
-                                        {phaseOptions.map((ing, idx) => {
-                                            const count = currentSelections.filter(i => i === ing).length;
-                                            const isNoLeva = ing === "Não leva" || ing === "Não";
-                                            return (
-                                                <button key={idx} onClick={() => handleSelection(ing)} className={`relative p-2 md:p-4 rounded-lg md:rounded-xl font-bold text-xs md:text-sm transition-all active:scale-95 flex items-center justify-center text-center h-24 md:h-32 shadow-sm break-words leading-tight animate-fade-in ${isNoLeva ? "bg-pastel-blue-300 text-white hover:bg-pastel-blue-400" : "bg-white text-slate-700 border-2 border-pastel-blue-200 hover:border-pastel-blue-400 shadow-md hover:shadow-lg"}`}>
-                                                    {ing}
-                                                    {count > 0 && <span className="absolute -top-2 -right-2 bg-pastel-blue-500 text-white text-xs w-6 h-6 flex items-center justify-center rounded-full border-2 border-white shadow-md z-10">{count}</span>}
-                                                </button>
-                                            )
-                                        })}
+                                        {phaseOptions.map((ing, idx) => { const count = currentSelections.filter(i => i === ing).length; const isNoLeva = ing === "Não leva" || ing === "Não"; return (<button key={idx} onClick={() => handleSelection(ing)} className={`relative p-2 md:p-4 rounded-lg md:rounded-xl font-bold text-xs md:text-sm transition-all active:scale-95 flex items-center justify-center text-center h-24 md:h-32 shadow-sm break-words leading-tight animate-fade-in ${isNoLeva ? "bg-pastel-blue-300 text-white hover:bg-pastel-blue-400" : "bg-white text-slate-700 border-2 border-pastel-blue-200 hover:border-pastel-blue-400 shadow-md hover:shadow-lg"}`}>{ing}{count > 0 && <span className="absolute -top-2 -right-2 bg-pastel-blue-500 text-white text-xs w-6 h-6 flex items-center justify-center rounded-full border-2 border-white shadow-md z-10">{count}</span>}</button>)})}
                                     </div>
                                 </div>
-                                <div className="p-3 md:p-4 border-t border-pastel-blue-200/50 bg-pastel-blue-100/40 flex justify-between shrink-0">
-                                    <button onClick={resetToHome} className="flex items-center gap-2 text-pastel-blue-500 font-bold text-sm md:text-base hover:bg-pastel-blue-100/50 px-3 py-2 rounded-lg transition-colors"><IconHome size={20} color="#404FC2"/> INÍCIO</button>
-                                    <button onClick={handleUndo} disabled={currentSelections.length === 0} className="flex items-center gap-2 px-4 md:px-6 py-2 bg-white border border-pastel-blue-200 rounded-full font-bold text-pastel-blue-500 disabled:opacity-50 hover:bg-pastel-blue-100 text-sm md:text-base shadow-sm"><IconArrowLeft size={20} color="#404FC2"/> Desfazer</button>
-                                </div>
+                                <div className="p-3 md:p-4 border-t border-pastel-blue-200/50 bg-pastel-blue-100/40 flex justify-between shrink-0"><button onClick={resetToHome} className="flex items-center gap-2 text-pastel-blue-500 font-bold text-sm md:text-base hover:bg-pastel-blue-100/50 px-3 py-2 rounded-lg transition-colors"><IconHome size={20} color="#404FC2"/> INÍCIO</button><button onClick={handleUndo} disabled={currentSelections.length === 0} className="flex items-center gap-2 px-4 md:px-6 py-2 bg-white border border-pastel-blue-200 rounded-full font-bold text-pastel-blue-500 disabled:opacity-50 hover:bg-pastel-blue-100 text-sm md:text-base shadow-sm"><IconArrowLeft size={20} color="#404FC2"/> Desfazer</button></div>
                             </div>
                         )}
 
                         {gameState === "RESULT_SUCCESS" && (
                             <div className="text-center p-10 bg-pastel-blue-100/95 rounded-3xl shadow-2xl animate-bounce-in mx-4 border border-white/50 max-w-md w-full">
-                                <h2 className="text-3xl md:text-4xl font-extrabold text-pastel-green mb-6 drop-shadow-sm flex items-center justify-center gap-2">
-                                    PARABÉNS!
-                                </h2>
+                                <h2 className="text-3xl md:text-4xl font-extrabold text-pastel-green mb-6 drop-shadow-sm flex items-center justify-center gap-2"><IconCheck size={40} /> PARABÉNS!</h2>
                                 <p className="text-slate-600 mb-8 font-medium text-xl">{resultMessage}</p>
-                                <button onClick={resetToHome} className="mt-4 bg-pastel-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:bg-pastel-blue-400 transition-all active:scale-95 flex items-center justify-center gap-2 w-full">
-                                    <IconHome size={24}/> Voltar ao Início
-                                </button>
+                                <button onClick={resetToHome} className="mt-4 bg-pastel-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:bg-pastel-blue-400 transition-all active:scale-95 flex items-center justify-center gap-2 w-full"><IconHome size={24}/> Voltar ao Início</button>
                             </div>
                         )}
 
                         {gameState === "RESULT_FAIL" && (
                             <div className="text-center p-6 md:p-10 bg-pastel-blue-100/95 rounded-3xl shadow-2xl animate-shake mx-4 max-h-[80vh] overflow-y-auto custom-scroll border border-white/50">
-                                <h2 className="text-2xl md:text-3xl font-extrabold text-pastel-pink-500 mb-4">
-                                    EPA! 😟
-                                </h2>
+                                <h2 className="text-2xl md:text-3xl font-extrabold text-pastel-pink-500 mb-4">EPA! 😟</h2>
                                 <p className="text-base md:text-lg text-slate-700 mb-6">{resultMessage}</p>
                                 <div className="bg-white/60 p-4 rounded-lg text-left text-sm text-pastel-pink-500 mb-6 border border-pastel-pink-200">{errorDetails.map((e, i) => <div key={i} className="mb-1">• {e}</div>)}</div>
-                                <button onClick={resetToHome} className="bg-pastel-blue-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-pastel-blue-400 transition-transform active:scale-95 flex items-center justify-center gap-2 mx-auto">
-                                    <IconRotate size={20} color="#FFF"/> Tentar Novamente
-                                </button>
+                                <button onClick={resetToHome} className="bg-pastel-blue-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-pastel-blue-400 transition-transform active:scale-95 flex items-center justify-center gap-2 mx-auto"><IconRotate size={20} color="#FFF"/> Tentar Novamente</button>
                             </div>
                         )}
 
@@ -570,12 +573,7 @@
                     
                     {/* BOTÃO DE VERSÃO & MODAL */}
                     <div className="fixed bottom-1 right-2 z-50">
-                        <button 
-                            onClick={() => setShowChangelog(true)}
-                            className="text-xs text-slate-500/60 font-sans hover:text-pastel-blue-500 hover:underline transition-colors select-none"
-                        >
-                            v2.11 BETA
-                        </button>
+                        <button onClick={() => setShowChangelog(true)} className="text-xs text-slate-500/60 font-sans hover:text-pastel-blue-500 hover:underline transition-colors select-none">v2.12 BETA</button>
                     </div>
                     
                     {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
